@@ -128,8 +128,6 @@ export function FlowCanvas() {
     <div
       ref={reactFlowWrapper}
       className="h-full w-full"
-      onDrop={onDrop}
-      onDragOver={onDragOver}
     >
       <ReactFlow
         nodes={nodes}
