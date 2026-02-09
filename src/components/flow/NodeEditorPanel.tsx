@@ -1,4 +1,4 @@
-import { X, MessageSquare, GitBranch, MousePointerClick, Zap, Timer, Play } from 'lucide-react';
+import { X, MessageSquare, GitBranch, MousePointerClick, Zap, Timer, Play, ImageIcon, MessageCircleQuestion, MapPin, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,6 +14,10 @@ const iconMap: Record<NodeType, React.ReactNode> = {
   buttonReply: <MousePointerClick className="h-4 w-4" />,
   action: <Zap className="h-4 w-4" />,
   delay: <Timer className="h-4 w-4" />,
+  image: <ImageIcon className="h-4 w-4" />,
+  userInput: <MessageCircleQuestion className="h-4 w-4" />,
+  location: <MapPin className="h-4 w-4" />,
+  httpRequest: <Globe className="h-4 w-4" />,
 };
 
 const colorMap: Record<NodeType, string> = {
@@ -23,6 +27,10 @@ const colorMap: Record<NodeType, string> = {
   buttonReply: 'text-node-button',
   action: 'text-node-action',
   delay: 'text-node-delay',
+  image: 'text-node-image',
+  userInput: 'text-node-userInput',
+  location: 'text-node-location',
+  httpRequest: 'text-node-httpRequest',
 };
 
 export function NodeEditorPanel() {
@@ -33,9 +41,9 @@ export function NodeEditorPanel() {
   const nodeType = selectedNode.data.type;
 
   return (
-    <div className="absolute right-4 top-4 z-10 w-80 rounded-xl border border-border bg-card shadow-xl animate-in slide-in-from-right-4">
+    <div className="absolute right-4 top-4 z-10 w-80 rounded-xl border border-border bg-card shadow-xl animate-in slide-in-from-right-4 max-h-[calc(100vh-120px)] overflow-y-auto">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-border px-4 py-3">
+      <div className="flex items-center justify-between border-b border-border px-4 py-3 sticky top-0 bg-card rounded-t-xl z-10">
         <div className="flex items-center gap-2">
           <span className={colorMap[nodeType]}>{iconMap[nodeType]}</span>
           <span className="font-semibold text-foreground">{selectedNode.data.label}</span>
@@ -119,7 +127,16 @@ export function NodeEditorPanel() {
         {/* Button Reply node */}
         {nodeType === 'buttonReply' && (
           <div className="space-y-3">
-            <Label className="text-xs text-muted-foreground">Botões</Label>
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Texto da pergunta</Label>
+              <Textarea
+                value={selectedNode.data.content || ''}
+                onChange={(e) => updateNodeData(selectedNode.id, { content: e.target.value })}
+                className="min-h-[60px] resize-none"
+                placeholder="Escolha uma opção:"
+              />
+            </div>
+            <Label className="text-xs text-muted-foreground">Botões (cada um com saída individual)</Label>
             {selectedNode.data.buttons?.map((button, index) => (
               <div key={button.id} className="flex gap-2">
                 <Input
@@ -159,6 +176,9 @@ export function NodeEditorPanel() {
             >
               Adicionar botão
             </Button>
+            <p className="text-[10px] text-muted-foreground">
+              Cada botão tem uma saída separada (à direita do bloco). Conecte cada uma ao próximo passo.
+            </p>
           </div>
         )}
 
@@ -212,6 +232,174 @@ export function NodeEditorPanel() {
                 </SelectContent>
               </Select>
             </div>
+          </div>
+        )}
+
+        {/* Image node */}
+        {nodeType === 'image' && (
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label htmlFor="imageUrl" className="text-xs text-muted-foreground">
+                URL da Imagem
+              </Label>
+              <Input
+                id="imageUrl"
+                value={selectedNode.data.imageUrl || ''}
+                onChange={(e) => updateNodeData(selectedNode.id, { imageUrl: e.target.value })}
+                className="h-9 font-mono text-sm"
+                placeholder="https://exemplo.com/imagem.jpg"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="caption" className="text-xs text-muted-foreground">
+                Legenda (opcional)
+              </Label>
+              <Textarea
+                id="caption"
+                value={selectedNode.data.caption || ''}
+                onChange={(e) => updateNodeData(selectedNode.id, { caption: e.target.value })}
+                className="min-h-[60px] resize-none"
+                placeholder="Legenda da imagem..."
+              />
+            </div>
+          </div>
+        )}
+
+        {/* User Input node */}
+        {nodeType === 'userInput' && (
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label htmlFor="promptText" className="text-xs text-muted-foreground">
+                Pergunta para o usuário
+              </Label>
+              <Textarea
+                id="promptText"
+                value={selectedNode.data.promptText || ''}
+                onChange={(e) => updateNodeData(selectedNode.id, { promptText: e.target.value })}
+                className="min-h-[80px] resize-none"
+                placeholder="Qual é o seu nome?"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="variableName" className="text-xs text-muted-foreground">
+                Salvar resposta na variável
+              </Label>
+              <Input
+                id="variableName"
+                value={selectedNode.data.variableName || ''}
+                onChange={(e) => updateNodeData(selectedNode.id, { variableName: e.target.value })}
+                className="h-9 font-mono"
+                placeholder="user_name"
+              />
+              <p className="text-[10px] text-muted-foreground">
+                Use essa variável em condições ou mensagens com {'{{variável}}'}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Location node */}
+        {nodeType === 'location' && (
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label htmlFor="locationTitle" className="text-xs text-muted-foreground">
+                Título da localização
+              </Label>
+              <Input
+                id="locationTitle"
+                value={selectedNode.data.locationTitle || ''}
+                onChange={(e) => updateNodeData(selectedNode.id, { locationTitle: e.target.value })}
+                className="h-9"
+                placeholder="Nosso escritório"
+              />
+            </div>
+            <div className="flex gap-2">
+              <div className="flex-1 space-y-2">
+                <Label htmlFor="latitude" className="text-xs text-muted-foreground">Latitude</Label>
+                <Input
+                  id="latitude"
+                  type="number"
+                  step="any"
+                  value={selectedNode.data.latitude || ''}
+                  onChange={(e) => updateNodeData(selectedNode.id, { latitude: parseFloat(e.target.value) || 0 })}
+                  className="h-9 font-mono text-sm"
+                  placeholder="-23.5505"
+                />
+              </div>
+              <div className="flex-1 space-y-2">
+                <Label htmlFor="longitude" className="text-xs text-muted-foreground">Longitude</Label>
+                <Input
+                  id="longitude"
+                  type="number"
+                  step="any"
+                  value={selectedNode.data.longitude || ''}
+                  onChange={(e) => updateNodeData(selectedNode.id, { longitude: parseFloat(e.target.value) || 0 })}
+                  className="h-9 font-mono text-sm"
+                  placeholder="-46.6333"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* HTTP Request node */}
+        {nodeType === 'httpRequest' && (
+          <div className="space-y-3">
+            <div className="flex gap-2">
+              <div className="w-28 space-y-2">
+                <Label className="text-xs text-muted-foreground">Método</Label>
+                <Select
+                  value={selectedNode.data.httpMethod || 'GET'}
+                  onValueChange={(value) => updateNodeData(selectedNode.id, { httpMethod: value as any })}
+                >
+                  <SelectTrigger className="h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="GET">GET</SelectItem>
+                    <SelectItem value="POST">POST</SelectItem>
+                    <SelectItem value="PUT">PUT</SelectItem>
+                    <SelectItem value="DELETE">DELETE</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex-1 space-y-2">
+                <Label htmlFor="httpUrl" className="text-xs text-muted-foreground">URL</Label>
+                <Input
+                  id="httpUrl"
+                  value={selectedNode.data.httpUrl || ''}
+                  onChange={(e) => updateNodeData(selectedNode.id, { httpUrl: e.target.value })}
+                  className="h-9 font-mono text-sm"
+                  placeholder="https://api.exemplo.com/data"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="httpHeaders" className="text-xs text-muted-foreground">
+                Headers (JSON)
+              </Label>
+              <Textarea
+                id="httpHeaders"
+                value={selectedNode.data.httpHeaders || ''}
+                onChange={(e) => updateNodeData(selectedNode.id, { httpHeaders: e.target.value })}
+                className="min-h-[60px] resize-none font-mono text-sm"
+                placeholder='{"Authorization": "Bearer token"}'
+              />
+            </div>
+            {(selectedNode.data.httpMethod === 'POST' || selectedNode.data.httpMethod === 'PUT') && (
+              <div className="space-y-2">
+                <Label htmlFor="httpBody" className="text-xs text-muted-foreground">
+                  Body (JSON)
+                </Label>
+                <Textarea
+                  id="httpBody"
+                  value={selectedNode.data.httpBody || ''}
+                  onChange={(e) => updateNodeData(selectedNode.id, { httpBody: e.target.value })}
+                  className="min-h-[60px] resize-none font-mono text-sm"
+                  placeholder='{"key": "value"}'
+                />
+              </div>
+            )}
           </div>
         )}
       </div>

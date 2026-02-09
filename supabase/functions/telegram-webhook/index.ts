@@ -35,6 +35,17 @@ interface FlowNode {
     action?: string;
     delay?: number;
     delayUnit?: string;
+    imageUrl?: string;
+    caption?: string;
+    promptText?: string;
+    variableName?: string;
+    latitude?: number;
+    longitude?: number;
+    locationTitle?: string;
+    httpUrl?: string;
+    httpMethod?: string;
+    httpHeaders?: string;
+    httpBody?: string;
   };
 }
 
@@ -77,6 +88,42 @@ async function sendTelegramMessage(
   return res.json();
 }
 
+async function sendTelegramPhoto(
+  token: string,
+  chatId: number,
+  photoUrl: string,
+  caption?: string
+) {
+  const url = `${TELEGRAM_API}${token}/sendPhoto`;
+  const body: any = {
+    chat_id: chatId,
+    photo: photoUrl,
+  };
+  if (caption) body.caption = caption;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  return res.json();
+}
+
+async function sendTelegramLocation(
+  token: string,
+  chatId: number,
+  latitude: number,
+  longitude: number
+) {
+  const url = `${TELEGRAM_API}${token}/sendLocation`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chat_id: chatId, latitude, longitude }),
+  });
+  return res.json();
+}
+
 async function answerCallbackQuery(token: string, callbackQueryId: string) {
   const url = `${TELEGRAM_API}${token}/answerCallbackQuery`;
   await fetch(url, {
@@ -86,7 +133,13 @@ async function answerCallbackQuery(token: string, callbackQueryId: string) {
   });
 }
 
-function findNextNodes(edges: FlowEdge[], currentNodeId: string): string[] {
+function findNextNodes(edges: FlowEdge[], currentNodeId: string, sourceHandle?: string): string[] {
+  return edges
+    .filter((e) => e.source === currentNodeId && (!sourceHandle || e.sourceHandle === sourceHandle))
+    .map((e) => e.target);
+}
+
+function findNextNodesDefault(edges: FlowEdge[], currentNodeId: string): string[] {
   return edges
     .filter((e) => e.source === currentNodeId)
     .map((e) => e.target);
@@ -100,16 +153,20 @@ function findStartNode(nodes: FlowNode[]): FlowNode | undefined {
   return nodes.find((n) => n.type === "start");
 }
 
+function replaceVariables(text: string, variables: Record<string, any>): string {
+  return text.replace(/\{\{(\w+)\}\}/g, (_, key) => {
+    return variables[key] !== undefined ? String(variables[key]) : `{{${key}}}`;
+  });
+}
+
 function evaluateCondition(
   condition: string,
   userMessage: string,
   variables: Record<string, any>
 ): boolean {
   try {
-    // Simple condition evaluation
     const ctx = { ...variables, "user.message": userMessage, message: userMessage };
     
-    // Handle common patterns
     if (condition.includes("==")) {
       const [left, right] = condition.split("==").map((s) => s.trim());
       const leftVal = left === "user.message" || left === "message" ? userMessage : ctx[left] || left;
@@ -135,6 +192,26 @@ function evaluateCondition(
   }
 }
 
+async function continueFromNode(
+  nodeId: string,
+  nodes: FlowNode[],
+  edges: FlowEdge[],
+  token: string,
+  chatId: number,
+  userMessage: string,
+  variables: Record<string, any>,
+  supabase: any,
+  flowId: string
+): Promise<void> {
+  const nextIds = findNextNodesDefault(edges, nodeId);
+  for (const nextId of nextIds) {
+    const nextNode = findNodeById(nodes, nextId);
+    if (nextNode) {
+      await processNode(nextNode, nodes, edges, token, chatId, userMessage, variables, supabase, flowId);
+    }
+  }
+}
+
 async function processNode(
   node: FlowNode,
   nodes: FlowNode[],
@@ -148,37 +225,35 @@ async function processNode(
 ): Promise<void> {
   switch (node.type) {
     case "start": {
-      // Move to next node(s)
-      const nextIds = findNextNodes(edges, node.id);
-      for (const nextId of nextIds) {
-        const nextNode = findNodeById(nodes, nextId);
-        if (nextNode) {
-          await processNode(nextNode, nodes, edges, token, chatId, userMessage, variables, supabase, flowId);
-        }
-      }
+      await continueFromNode(node.id, nodes, edges, token, chatId, userMessage, variables, supabase, flowId);
       break;
     }
 
     case "message": {
       if (node.data.content) {
-        await sendTelegramMessage(token, chatId, node.data.content);
+        const text = replaceVariables(node.data.content, variables);
+        await sendTelegramMessage(token, chatId, text);
       }
-      // Move to next node(s)
-      const nextIds = findNextNodes(edges, node.id);
-      for (const nextId of nextIds) {
-        const nextNode = findNodeById(nodes, nextId);
-        if (nextNode) {
-          await processNode(nextNode, nodes, edges, token, chatId, userMessage, variables, supabase, flowId);
-        }
+      await continueFromNode(node.id, nodes, edges, token, chatId, userMessage, variables, supabase, flowId);
+      break;
+    }
+
+    case "image": {
+      if (node.data.imageUrl) {
+        const caption = node.data.caption ? replaceVariables(node.data.caption, variables) : undefined;
+        await sendTelegramPhoto(token, chatId, node.data.imageUrl, caption);
       }
+      await continueFromNode(node.id, nodes, edges, token, chatId, userMessage, variables, supabase, flowId);
       break;
     }
 
     case "buttonReply": {
       if (node.data.buttons && node.data.buttons.length > 0) {
-        const text = node.data.content || node.data.label || "Escolha uma opção:";
+        const text = node.data.content
+          ? replaceVariables(node.data.content, variables)
+          : node.data.label || "Escolha uma opção:";
         await sendTelegramMessage(token, chatId, text, node.data.buttons);
-        // Save current node as waiting for button response
+        // Save session - waiting for button response
         await supabase
           .from("bot_sessions")
           .upsert(
@@ -194,17 +269,34 @@ async function processNode(
       break;
     }
 
+    case "userInput": {
+      // Send the prompt text
+      if (node.data.promptText) {
+        const text = replaceVariables(node.data.promptText, variables);
+        await sendTelegramMessage(token, chatId, text);
+      }
+      // Save session - waiting for user text input
+      await supabase
+        .from("bot_sessions")
+        .upsert(
+          {
+            flow_id: flowId,
+            telegram_chat_id: chatId,
+            current_node_id: node.id,
+            variables,
+          },
+          { onConflict: "flow_id,telegram_chat_id" }
+        );
+      break;
+    }
+
     case "condition": {
       const condition = node.data.condition || "";
       const result = evaluateCondition(condition, userMessage, variables);
       
-      // Get edges from this node - look for labeled handles or just take first/second
       const outEdges = edges.filter((e) => e.source === node.id);
-      
-      // Convention: first edge = true, second edge = false
-      // Or use sourceHandle if available
-      const trueEdge = outEdges.find((e) => e.sourceHandle === "true") || outEdges[0];
-      const falseEdge = outEdges.find((e) => e.sourceHandle === "false") || outEdges[1];
+      const trueEdge = outEdges.find((e) => e.sourceHandle === "yes") || outEdges[0];
+      const falseEdge = outEdges.find((e) => e.sourceHandle === "no") || outEdges[1];
       
       const nextEdge = result ? trueEdge : falseEdge;
       if (nextEdge) {
@@ -216,39 +308,69 @@ async function processNode(
       break;
     }
 
+    case "location": {
+      if (node.data.latitude && node.data.longitude) {
+        await sendTelegramLocation(token, chatId, node.data.latitude, node.data.longitude);
+      }
+      await continueFromNode(node.id, nodes, edges, token, chatId, userMessage, variables, supabase, flowId);
+      break;
+    }
+
+    case "httpRequest": {
+      if (node.data.httpUrl) {
+        try {
+          const url = replaceVariables(node.data.httpUrl, variables);
+          const method = node.data.httpMethod || "GET";
+          const headers: Record<string, string> = { "Content-Type": "application/json" };
+          
+          if (node.data.httpHeaders) {
+            try {
+              const customHeaders = JSON.parse(replaceVariables(node.data.httpHeaders, variables));
+              Object.assign(headers, customHeaders);
+            } catch {}
+          }
+
+          const fetchOptions: any = { method, headers };
+          if ((method === "POST" || method === "PUT") && node.data.httpBody) {
+            fetchOptions.body = replaceVariables(node.data.httpBody, variables);
+          }
+
+          const res = await fetch(url, fetchOptions);
+          const responseData = await res.text();
+          
+          // Store response in variables
+          variables.http_response = responseData;
+          variables.http_status = res.status;
+          try {
+            variables.http_json = JSON.parse(responseData);
+          } catch {}
+          
+          console.log(`HTTP ${method} ${url} → ${res.status}`);
+        } catch (err) {
+          console.error("HTTP request error:", err);
+          variables.http_error = String(err);
+        }
+      }
+      await continueFromNode(node.id, nodes, edges, token, chatId, userMessage, variables, supabase, flowId);
+      break;
+    }
+
     case "delay": {
       const delay = node.data.delay || 1;
       const unit = node.data.delayUnit || "seconds";
       let ms = delay * 1000;
       if (unit === "minutes") ms = delay * 60 * 1000;
       if (unit === "hours") ms = delay * 60 * 60 * 1000;
-      
-      // Cap at 25 seconds (edge function timeout limit)
       ms = Math.min(ms, 25000);
       
       await new Promise((resolve) => setTimeout(resolve, ms));
-      
-      const nextIds = findNextNodes(edges, node.id);
-      for (const nextId of nextIds) {
-        const nextNode = findNodeById(nodes, nextId);
-        if (nextNode) {
-          await processNode(nextNode, nodes, edges, token, chatId, userMessage, variables, supabase, flowId);
-        }
-      }
+      await continueFromNode(node.id, nodes, edges, token, chatId, userMessage, variables, supabase, flowId);
       break;
     }
 
     case "action": {
-      // For now just log the action - can be extended later
       console.log(`Action executed: ${node.data.action} for chat ${chatId}`);
-      
-      const nextIds = findNextNodes(edges, node.id);
-      for (const nextId of nextIds) {
-        const nextNode = findNodeById(nodes, nextId);
-        if (nextNode) {
-          await processNode(nextNode, nodes, edges, token, chatId, userMessage, variables, supabase, flowId);
-        }
-      }
+      await continueFromNode(node.id, nodes, edges, token, chatId, userMessage, variables, supabase, flowId);
       break;
     }
   }
@@ -328,29 +450,54 @@ Deno.serve(async (req) => {
 
     const session = sessions?.[0];
 
-    if (isCallbackQuery && session?.current_node_id) {
-      // Handle button response - find the button node and proceed to next
+    if (session?.current_node_id) {
       const currentNode = findNodeById(nodes, session.current_node_id);
-      if (currentNode && currentNode.type === "buttonReply") {
-        // Find which button was pressed and route to next node
-        const outEdges = edges.filter((e) => e.source === currentNode.id);
-        // For now, follow all edges from the button node
-        for (const edge of outEdges) {
+      
+      if (isCallbackQuery && currentNode?.type === "buttonReply") {
+        // Handle button press - route to the specific button's output
+        const btnHandle = `btn-${callbackData}`;
+        const specificEdges = edges.filter(
+          (e) => e.source === currentNode.id && e.sourceHandle === btnHandle
+        );
+        
+        // If no specific handle match, try default output
+        const edgesToFollow = specificEdges.length > 0
+          ? specificEdges
+          : edges.filter((e) => e.source === currentNode.id && e.sourceHandle === "default");
+
+        const variables = { ...session.variables, last_button: callbackData };
+        
+        for (const edge of edgesToFollow) {
           const nextNode = findNodeById(nodes, edge.target);
           if (nextNode) {
-            const variables = { ...session.variables, last_button: callbackData };
             await processNode(nextNode, nodes, edges, TELEGRAM_BOT_TOKEN, chatId, callbackData, variables, supabase, flowId);
           }
         }
+
         // Clear session
         await supabase
           .from("bot_sessions")
           .delete()
           .eq("flow_id", flowId)
           .eq("telegram_chat_id", chatId);
+
+      } else if (!isCallbackQuery && currentNode?.type === "userInput") {
+        // Handle text input - store in variable and continue
+        const varName = currentNode.data.variableName || "user_response";
+        const variables = { ...session.variables, [varName]: userMessage };
+
+        // Clear session first
+        await supabase
+          .from("bot_sessions")
+          .delete()
+          .eq("flow_id", flowId)
+          .eq("telegram_chat_id", chatId);
+
+        // Continue to next nodes
+        await continueFromNode(currentNode.id, nodes, edges, TELEGRAM_BOT_TOKEN, chatId, userMessage, variables, supabase, flowId);
       }
     } else {
-      // New message - find matching start node
+      // New conversation - check for start trigger
       const startNode = findStartNode(nodes);
       if (startNode) {
         const triggerCommand = startNode.data.content || "/start";

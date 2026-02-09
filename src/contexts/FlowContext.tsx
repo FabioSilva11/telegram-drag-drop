@@ -23,6 +23,10 @@ const defaultNodeData: Record<NodeType, Partial<FlowNodeData>> = {
   buttonReply: { label: 'Botões', buttons: [{ id: '1', text: 'Opção 1' }, { id: '2', text: 'Opção 2' }] },
   action: { label: 'Ação', action: 'send_api_request' },
   delay: { label: 'Atraso', delay: 5, delayUnit: 'seconds' },
+  image: { label: 'Imagem', imageUrl: '', caption: '' },
+  userInput: { label: 'Entrada', promptText: 'Digite sua resposta:', variableName: 'user_response' },
+  location: { label: 'Localização', latitude: 0, longitude: 0, locationTitle: '' },
+  httpRequest: { label: 'HTTP Request', httpUrl: '', httpMethod: 'GET', httpHeaders: '', httpBody: '' },
 };
 
 interface HistoryState {

@@ -68,6 +68,10 @@ export default {
           button: "hsl(var(--node-button))",
           action: "hsl(var(--node-action))",
           delay: "hsl(var(--node-delay))",
+          image: "hsl(var(--node-image))",
+          userInput: "hsl(var(--node-userInput))",
+          location: "hsl(var(--node-location))",
+          httpRequest: "hsl(var(--node-httpRequest))",
         },
       },
       borderRadius: {

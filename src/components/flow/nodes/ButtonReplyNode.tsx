@@ -18,21 +18,32 @@ export function ButtonReplyNode({ data }: NodeProps) {
         <span className="text-sm font-semibold text-primary-foreground">{nodeData.label}</span>
       </div>
       <div className="space-y-1.5 px-4 py-3">
-        {buttons.map((btn) => (
-          <div
-            key={btn.id}
-            className="rounded-lg border border-node-button/20 bg-node-button/10 px-3 py-1.5 text-center text-xs font-medium text-node-button"
-          >
-            {btn.text}
+        {buttons.map((btn, index) => (
+          <div key={btn.id} className="relative">
+            <div className="rounded-lg border border-node-button/20 bg-node-button/10 px-3 py-1.5 text-center text-xs font-medium text-node-button">
+              {btn.text || `Botão ${index + 1}`}
+            </div>
+            <Handle
+              type="source"
+              position={Position.Right}
+              id={`btn-${btn.id}`}
+              style={{ top: '50%', right: -8 }}
+              className="!border-node-button/50 !bg-node-button !h-2.5 !w-2.5"
+            />
           </div>
         ))}
         {buttons.length === 0 && (
           <p className="text-xs text-muted-foreground">Sem botões configurados</p>
         )}
       </div>
+      {/* Fallback output for when no button is matched */}
+      <div className="flex items-center justify-center border-t border-node-button/10 px-4 py-1.5">
+        <span className="text-[10px] text-muted-foreground">Saída padrão ↓</span>
+      </div>
       <Handle
         type="source"
         position={Position.Bottom}
+        id="default"
         className="!border-node-button/50 !bg-node-button"
       />
     </div>
