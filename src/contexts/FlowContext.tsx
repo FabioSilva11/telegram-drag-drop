@@ -129,6 +129,15 @@ export function FlowProvider({ children }: { children: React.ReactNode }) {
             : node
         )
       );
+      
+      // Also update selectedNode if it's the one being edited
+      setSelectedNode((current) => {
+        if (current && current.id === nodeId) {
+          return { ...current, data: { ...current.data, ...data } as FlowNodeData };
+        }
+        return current;
+      });
+      
       setTimeout(saveHistory, 0);
     },
     [setNodes, saveHistory]
