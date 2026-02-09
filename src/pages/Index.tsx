@@ -1,9 +1,9 @@
+import { ReactFlowProvider } from '@xyflow/react';
+import { FlowProvider } from '@/contexts/FlowContext';
 import { NodesSidebar } from '@/components/flow/NodesSidebar';
 import { FlowCanvas } from '@/components/flow/FlowCanvas';
 import { FlowToolbar } from '@/components/flow/FlowToolbar';
 import { NodeEditorPanel } from '@/components/flow/NodeEditorPanel';
-import { ReactFlowProvider } from '@xyflow/react';
-import { FlowProvider } from '@/contexts/FlowContext';
 
 const Index = () => {
   return (
