@@ -5,24 +5,21 @@ import {
   MiniMap,
   Background,
   BackgroundVariant,
-  useNodesState,
-  useEdgesState,
-  addEdge,
-  Connection,
-  NodeTypes,
   ReactFlowInstance,
+  NodeMouseHandler,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
-import { FlowNode, FlowEdge, FlowNodeData, NodeType } from '@/types/flow';
+import { FlowNode, NodeType } from '@/types/flow';
 import { StartNode } from './nodes/StartNode';
 import { MessageNode } from './nodes/MessageNode';
 import { ConditionNode } from './nodes/ConditionNode';
 import { ButtonReplyNode } from './nodes/ButtonReplyNode';
 import { ActionNode } from './nodes/ActionNode';
 import { DelayNode } from './nodes/DelayNode';
+import { useFlow } from '@/contexts/FlowContext';
 
-const nodeTypes: NodeTypes = {
+const nodeTypes = {
   start: StartNode,
   message: MessageNode,
   condition: ConditionNode,
@@ -31,52 +28,21 @@ const nodeTypes: NodeTypes = {
   delay: DelayNode,
 };
 
-const initialNodes: FlowNode[] = [
-  {
-    id: 'start-1',
-    type: 'start',
-    position: { x: 400, y: 80 },
-    data: { label: 'Início', type: 'start', content: '/start' },
-  },
-];
-
-const initialEdges: FlowEdge[] = [];
-
-let nodeId = 1;
-const getNewId = () => `node_${Date.now()}_${nodeId++}`;
-
-const defaultNodeData: Record<NodeType, Partial<FlowNodeData>> = {
-  start: { label: 'Início', content: '/start' },
-  message: { label: 'Mensagem', content: 'Digite sua mensagem aqui...' },
-  condition: { label: 'Condição', condition: 'user.message == "sim"' },
-  buttonReply: { label: 'Botões', buttons: [{ id: '1', text: 'Opção 1' }, { id: '2', text: 'Opção 2' }] },
-  action: { label: 'Ação', action: 'send_api_request' },
-  delay: { label: 'Atraso', delay: 5, delayUnit: 'seconds' },
-};
-
 const validNodeTypes: NodeType[] = ['start', 'message', 'condition', 'buttonReply', 'action', 'delay'];
 
 export function FlowCanvas() {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
-
-  const onConnect = useCallback(
-    (connection: Connection) => {
-      setEdges((eds) =>
-        addEdge(
-          {
-            ...connection,
-            animated: true,
-            style: { stroke: 'hsl(200, 85%, 50%)', strokeWidth: 2 },
-          },
-          eds
-        )
-      );
-    },
-    [setEdges]
-  );
+  
+  const {
+    nodes,
+    edges,
+    onNodesChange,
+    onEdgesChange,
+    onConnect,
+    addNode,
+    setSelectedNode,
+  } = useFlow();
 
   const onDragOver = useCallback((event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -92,16 +58,12 @@ export function FlowCanvas() {
       if (!type) {
         type = event.dataTransfer.getData('text/plain') as NodeType;
       }
-      
-      console.log('[FlowCanvas] Drop event fired, type:', type, 'instance:', !!reactFlowInstance);
 
       if (!type || !validNodeTypes.includes(type)) {
-        console.warn('[FlowCanvas] Invalid node type:', type);
         return;
       }
       
       if (!reactFlowInstance) {
-        console.warn('[FlowCanvas] ReactFlow instance not ready');
         return;
       }
 
@@ -110,28 +72,24 @@ export function FlowCanvas() {
         y: event.clientY,
       });
 
-      console.log('[FlowCanvas] Creating node at position:', position);
-
-      const newNode: FlowNode = {
-        id: getNewId(),
-        type,
-        position,
-        data: {
-          type,
-          ...defaultNodeData[type],
-        } as FlowNodeData,
-      };
-
-      setNodes((nds) => [...nds, newNode]);
+      addNode(type, position);
     },
-    [reactFlowInstance, setNodes]
+    [reactFlowInstance, addNode]
   );
 
+  const onNodeClick: NodeMouseHandler = useCallback(
+    (_, node) => {
+      setSelectedNode(node as FlowNode);
+    },
+    [setSelectedNode]
+  );
+
+  const onPaneClick = useCallback(() => {
+    setSelectedNode(null);
+  }, [setSelectedNode]);
+
   return (
-    <div
-      ref={reactFlowWrapper}
-      className="h-full w-full"
-    >
+    <div ref={reactFlowWrapper} className="h-full w-full">
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -140,8 +98,9 @@ export function FlowCanvas() {
         onConnect={onConnect}
         onDrop={onDrop}
         onDragOver={onDragOver}
+        onNodeClick={onNodeClick}
+        onPaneClick={onPaneClick}
         onInit={(instance) => {
-          console.log('[FlowCanvas] ReactFlow instance initialized');
           setReactFlowInstance(instance);
         }}
         nodeTypes={nodeTypes}
