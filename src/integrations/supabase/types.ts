@@ -14,7 +14,74 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bot_flows: {
+        Row: {
+          bot_name: string
+          created_at: string
+          edges: Json
+          id: string
+          is_active: boolean
+          nodes: Json
+          updated_at: string
+        }
+        Insert: {
+          bot_name?: string
+          created_at?: string
+          edges?: Json
+          id?: string
+          is_active?: boolean
+          nodes?: Json
+          updated_at?: string
+        }
+        Update: {
+          bot_name?: string
+          created_at?: string
+          edges?: Json
+          id?: string
+          is_active?: boolean
+          nodes?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      bot_sessions: {
+        Row: {
+          created_at: string
+          current_node_id: string | null
+          flow_id: string
+          id: string
+          telegram_chat_id: number
+          updated_at: string
+          variables: Json
+        }
+        Insert: {
+          created_at?: string
+          current_node_id?: string | null
+          flow_id: string
+          id?: string
+          telegram_chat_id: number
+          updated_at?: string
+          variables?: Json
+        }
+        Update: {
+          created_at?: string
+          current_node_id?: string | null
+          flow_id?: string
+          id?: string
+          telegram_chat_id?: number
+          updated_at?: string
+          variables?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bot_sessions_flow_id_fkey"
+            columns: ["flow_id"]
+            isOneToOne: false
+            referencedRelation: "bot_flows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
