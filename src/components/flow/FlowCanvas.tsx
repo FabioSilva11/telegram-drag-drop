@@ -86,12 +86,11 @@ export function FlowCanvas() {
       event.preventDefault();
 
       const type = event.dataTransfer.getData('application/reactflow') as NodeType;
-      if (!type || !reactFlowInstance || !reactFlowWrapper.current) return;
+      if (!type || !reactFlowInstance) return;
 
-      const bounds = reactFlowWrapper.current.getBoundingClientRect();
       const position = reactFlowInstance.screenToFlowPosition({
-        x: event.clientX - bounds.left,
-        y: event.clientY - bounds.top,
+        x: event.clientX,
+        y: event.clientY,
       });
 
       const newNode: FlowNode = {
