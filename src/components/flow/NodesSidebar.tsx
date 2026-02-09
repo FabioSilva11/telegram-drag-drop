@@ -8,6 +8,10 @@ import {
   Timer,
   Bot,
   Settings,
+  ImageIcon,
+  MessageCircleQuestion,
+  MapPin,
+  Globe,
 } from 'lucide-react';
 import { BotSettingsDialog } from './BotSettingsDialog';
 import { useState } from 'react';
@@ -26,22 +30,46 @@ const nodeItems: DragItem[] = [
     description: 'Enviar mensagem de texto',
   },
   {
+    type: 'image',
+    label: 'Imagem',
+    icon: 'image',
+    description: 'Enviar foto ou imagem',
+  },
+  {
+    type: 'buttonReply',
+    label: 'Botões',
+    icon: 'button',
+    description: 'Resposta com botões (saídas individuais)',
+  },
+  {
+    type: 'userInput',
+    label: 'Entrada',
+    icon: 'userInput',
+    description: 'Aguardar resposta do usuário',
+  },
+  {
     type: 'condition',
     label: 'Condição',
     icon: 'branch',
     description: 'Desvio condicional (Se/Senão)',
   },
   {
-    type: 'buttonReply',
-    label: 'Botões',
-    icon: 'button',
-    description: 'Resposta com botões inline',
-  },
-  {
     type: 'action',
     label: 'Ação',
     icon: 'action',
     description: 'Executar ação ou API',
+  },
+  {
+    type: 'httpRequest',
+    label: 'HTTP Request',
+    icon: 'httpRequest',
+    description: 'Fazer requisição HTTP/API',
+  },
+  {
+    type: 'location',
+    label: 'Localização',
+    icon: 'location',
+    description: 'Enviar localização no mapa',
   },
   {
     type: 'delay',
@@ -58,6 +86,10 @@ const iconMap: Record<string, React.ReactNode> = {
   button: <MousePointerClick className="h-4 w-4" />,
   action: <Zap className="h-4 w-4" />,
   delay: <Timer className="h-4 w-4" />,
+  image: <ImageIcon className="h-4 w-4" />,
+  userInput: <MessageCircleQuestion className="h-4 w-4" />,
+  location: <MapPin className="h-4 w-4" />,
+  httpRequest: <Globe className="h-4 w-4" />,
 };
 
 const colorMap: Record<NodeType, string> = {
@@ -67,6 +99,10 @@ const colorMap: Record<NodeType, string> = {
   buttonReply: 'border-node-button/40 hover:border-node-button/70 text-node-button bg-node-button/5 hover:bg-node-button/10',
   action: 'border-node-action/40 hover:border-node-action/70 text-node-action bg-node-action/5 hover:bg-node-action/10',
   delay: 'border-node-delay/40 hover:border-node-delay/70 text-node-delay bg-node-delay/5 hover:bg-node-delay/10',
+  image: 'border-node-image/40 hover:border-node-image/70 text-node-image bg-node-image/5 hover:bg-node-image/10',
+  userInput: 'border-node-userInput/40 hover:border-node-userInput/70 text-node-userInput bg-node-userInput/5 hover:bg-node-userInput/10',
+  location: 'border-node-location/40 hover:border-node-location/70 text-node-location bg-node-location/5 hover:bg-node-location/10',
+  httpRequest: 'border-node-httpRequest/40 hover:border-node-httpRequest/70 text-node-httpRequest bg-node-httpRequest/5 hover:bg-node-httpRequest/10',
 };
 
 export function NodesSidebar() {
