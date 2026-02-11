@@ -8,32 +8,23 @@
   :root {
     --background: 220 20% 7%;
     --foreground: 210 20% 92%;
-
     --card: 220 18% 11%;
     --card-foreground: 210 20% 92%;
-
     --popover: 220 18% 13%;
     --popover-foreground: 210 20% 92%;
-
     --primary: 200 85% 50%;
     --primary-foreground: 220 20% 7%;
-
     --secondary: 220 15% 16%;
     --secondary-foreground: 210 20% 85%;
-
     --muted: 220 15% 18%;
     --muted-foreground: 215 15% 55%;
-
     --accent: 200 85% 50%;
     --accent-foreground: 220 20% 7%;
-
     --destructive: 0 72% 51%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 220 15% 20%;
     --input: 220 15% 18%;
     --ring: 200 85% 50%;
-
     --radius: 0.75rem;
 
     /* Node colors */
@@ -47,18 +38,19 @@
     --node-userInput: 300 65% 55%;
     --node-location: 15 80% 55%;
     --node-httpRequest: 190 75% 45%;
-
-    /* Gradients */
-    --gradient-start: linear-gradient(135deg, hsl(142, 70%, 45%), hsl(142, 70%, 35%));
-    --gradient-message: linear-gradient(135deg, hsl(200, 85%, 50%), hsl(210, 80%, 40%));
-    --gradient-condition: linear-gradient(135deg, hsl(35, 90%, 55%), hsl(25, 85%, 45%));
-    --gradient-button: linear-gradient(135deg, hsl(270, 65%, 60%), hsl(280, 60%, 50%));
-    --gradient-action: linear-gradient(135deg, hsl(0, 72%, 55%), hsl(350, 70%, 45%));
-    --gradient-delay: linear-gradient(135deg, hsl(45, 90%, 55%), hsl(35, 85%, 45%));
-    --gradient-image: linear-gradient(135deg, hsl(170, 70%, 45%), hsl(160, 65%, 35%));
-    --gradient-userInput: linear-gradient(135deg, hsl(300, 65%, 55%), hsl(310, 60%, 45%));
-    --gradient-location: linear-gradient(135deg, hsl(15, 80%, 55%), hsl(5, 75%, 45%));
-    --gradient-httpRequest: linear-gradient(135deg, hsl(190, 75%, 45%), hsl(200, 70%, 35%));
+    --node-video: 340 70% 50%;
+    --node-audio: 260 70% 55%;
+    --node-document: 50 70% 50%;
+    --node-animation: 320 70% 55%;
+    --node-sticker: 30 80% 55%;
+    --node-poll: 210 70% 50%;
+    --node-contact: 160 60% 45%;
+    --node-venue: 25 75% 50%;
+    --node-dice: 280 65% 55%;
+    --node-invoice: 145 65% 45%;
+    --node-editMessage: 55 75% 50%;
+    --node-deleteMessage: 0 65% 45%;
+    --node-mediaGroup: 230 65% 55%;
 
     --sidebar-background: 220 18% 9%;
     --sidebar-foreground: 210 20% 85%;
@@ -75,89 +67,28 @@
   * {
     @apply border-border;
   }
-
   body {
     @apply bg-background text-foreground;
     font-family: 'Space Grotesk', sans-serif;
   }
-
   code, .font-mono {
     font-family: 'JetBrains Mono', monospace;
   }
 }
 
 /* React Flow customization */
-.react-flow__background {
-  background-color: hsl(220, 20%, 7%) !important;
-}
-
-.react-flow__minimap {
-  background-color: hsl(220, 18%, 11%) !important;
-  border: 1px solid hsl(220, 15%, 20%) !important;
-  border-radius: 0.75rem !important;
-}
-
-.react-flow__controls {
-  border: 1px solid hsl(220, 15%, 20%) !important;
-  border-radius: 0.75rem !important;
-  overflow: hidden;
-}
-
-.react-flow__controls-button {
-  background-color: hsl(220, 18%, 13%) !important;
-  border-color: hsl(220, 15%, 20%) !important;
-  fill: hsl(210, 20%, 70%) !important;
-}
-
-.react-flow__controls-button:hover {
-  background-color: hsl(220, 15%, 18%) !important;
-}
-
-.react-flow__edge-path {
-  stroke: hsl(200, 85%, 50%) !important;
-  stroke-width: 2 !important;
-}
-
-.react-flow__edge.selected .react-flow__edge-path {
-  stroke: hsl(200, 85%, 65%) !important;
-  stroke-width: 3 !important;
-}
-
-.react-flow__handle {
-  width: 12px !important;
-  height: 12px !important;
-  border: 2px solid hsl(200, 85%, 50%) !important;
-  background-color: hsl(220, 18%, 11%) !important;
-  transition: all 0.15s ease;
-}
-
-.react-flow__handle:hover {
-  background-color: hsl(200, 85%, 50%) !important;
-  transform: scale(1.3);
-}
-
-.react-flow__connection-line {
-  stroke: hsl(200, 85%, 50%) !important;
-  stroke-width: 2 !important;
-}
-
-/* Drag preview */
-.dragging-node {
-  opacity: 0.7;
-  cursor: grabbing;
-}
-
-/* Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: hsl(220, 18%, 9%);
-}
-::-webkit-scrollbar-thumb {
-  background: hsl(220, 15%, 25%);
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: hsl(220, 15%, 35%);
-}
+.react-flow__background { background-color: hsl(220, 20%, 7%) !important; }
+.react-flow__minimap { background-color: hsl(220, 18%, 11%) !important; border: 1px solid hsl(220, 15%, 20%) !important; border-radius: 0.75rem !important; }
+.react-flow__controls { border: 1px solid hsl(220, 15%, 20%) !important; border-radius: 0.75rem !important; overflow: hidden; }
+.react-flow__controls-button { background-color: hsl(220, 18%, 13%) !important; border-color: hsl(220, 15%, 20%) !important; fill: hsl(210, 20%, 70%) !important; }
+.react-flow__controls-button:hover { background-color: hsl(220, 15%, 18%) !important; }
+.react-flow__edge-path { stroke: hsl(200, 85%, 50%) !important; stroke-width: 2 !important; }
+.react-flow__edge.selected .react-flow__edge-path { stroke: hsl(200, 85%, 65%) !important; stroke-width: 3 !important; }
+.react-flow__handle { width: 12px !important; height: 12px !important; border: 2px solid hsl(200, 85%, 50%) !important; background-color: hsl(220, 18%, 11%) !important; transition: all 0.15s ease; }
+.react-flow__handle:hover { background-color: hsl(200, 85%, 50%) !important; transform: scale(1.3); }
+.react-flow__connection-line { stroke: hsl(200, 85%, 50%) !important; stroke-width: 2 !important; }
+.dragging-node { opacity: 0.7; cursor: grabbing; }
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: hsl(220, 18%, 9%); }
+::-webkit-scrollbar-thumb { background: hsl(220, 15%, 25%); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(220, 15%, 35%); }

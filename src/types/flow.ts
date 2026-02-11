@@ -1,6 +1,6 @@
 import { Node, Edge } from '@xyflow/react';
 
-export type NodeType = 'start' | 'message' | 'condition' | 'buttonReply' | 'action' | 'delay' | 'image' | 'userInput' | 'location' | 'httpRequest';
+export type NodeType = 'start' | 'message' | 'condition' | 'buttonReply' | 'action' | 'delay' | 'image' | 'userInput' | 'location' | 'httpRequest' | 'video' | 'audio' | 'document' | 'animation' | 'sticker' | 'poll' | 'contact' | 'venue' | 'dice' | 'invoice' | 'editMessage' | 'deleteMessage' | 'mediaGroup';
 
 export interface FlowNodeData {
   label: string;
@@ -22,6 +22,44 @@ export interface FlowNodeData {
   httpMethod?: 'GET' | 'POST' | 'PUT' | 'DELETE';
   httpHeaders?: string;
   httpBody?: string;
+  // Video
+  videoUrl?: string;
+  // Audio
+  audioUrl?: string;
+  // Document
+  documentUrl?: string;
+  documentFilename?: string;
+  // Animation/GIF
+  animationUrl?: string;
+  // Sticker
+  stickerFileId?: string;
+  // Poll
+  pollQuestion?: string;
+  pollOptions?: string[];
+  pollIsAnonymous?: boolean;
+  pollType?: 'regular' | 'quiz';
+  pollCorrectOption?: number;
+  // Contact
+  contactPhone?: string;
+  contactFirstName?: string;
+  contactLastName?: string;
+  // Venue
+  venueAddress?: string;
+  // Dice
+  diceEmoji?: '🎲' | '🎯' | '🏀' | '⚽' | '🎳' | '🎰';
+  // Invoice
+  invoiceTitle?: string;
+  invoiceDescription?: string;
+  invoiceCurrency?: string;
+  invoicePrice?: number;
+  invoiceProviderToken?: string;
+  // Edit Message
+  editMessageId?: string;
+  editText?: string;
+  // Delete Message
+  deleteMessageId?: string;
+  // Media Group
+  mediaGroupItems?: { type: 'photo' | 'video' | 'document'; url: string; caption?: string }[];
   [key: string]: unknown;
 }
 

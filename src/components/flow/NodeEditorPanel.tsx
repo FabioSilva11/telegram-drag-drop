@@ -1,200 +1,114 @@
-import { X, MessageSquare, GitBranch, MousePointerClick, Zap, Timer, Play, ImageIcon, MessageCircleQuestion, MapPin, Globe } from 'lucide-react';
+import { X, MessageSquare, GitBranch, MousePointerClick, Zap, Timer, Play, ImageIcon, MessageCircleQuestion, MapPin, Globe, Video, Music, FileText, Film, Smile, BarChart3, Phone, Home, Dices, CreditCard, Pencil, Trash2, Images } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { useFlow } from '@/contexts/FlowContext';
 import { NodeType } from '@/types/flow';
 
 const iconMap: Record<NodeType, React.ReactNode> = {
-  start: <Play className="h-4 w-4" />,
-  message: <MessageSquare className="h-4 w-4" />,
-  condition: <GitBranch className="h-4 w-4" />,
-  buttonReply: <MousePointerClick className="h-4 w-4" />,
-  action: <Zap className="h-4 w-4" />,
-  delay: <Timer className="h-4 w-4" />,
-  image: <ImageIcon className="h-4 w-4" />,
-  userInput: <MessageCircleQuestion className="h-4 w-4" />,
-  location: <MapPin className="h-4 w-4" />,
-  httpRequest: <Globe className="h-4 w-4" />,
+  start: <Play className="h-4 w-4" />, message: <MessageSquare className="h-4 w-4" />,
+  condition: <GitBranch className="h-4 w-4" />, buttonReply: <MousePointerClick className="h-4 w-4" />,
+  action: <Zap className="h-4 w-4" />, delay: <Timer className="h-4 w-4" />,
+  image: <ImageIcon className="h-4 w-4" />, userInput: <MessageCircleQuestion className="h-4 w-4" />,
+  location: <MapPin className="h-4 w-4" />, httpRequest: <Globe className="h-4 w-4" />,
+  video: <Video className="h-4 w-4" />, audio: <Music className="h-4 w-4" />,
+  document: <FileText className="h-4 w-4" />, animation: <Film className="h-4 w-4" />,
+  sticker: <Smile className="h-4 w-4" />, poll: <BarChart3 className="h-4 w-4" />,
+  contact: <Phone className="h-4 w-4" />, venue: <Home className="h-4 w-4" />,
+  dice: <Dices className="h-4 w-4" />, invoice: <CreditCard className="h-4 w-4" />,
+  editMessage: <Pencil className="h-4 w-4" />, deleteMessage: <Trash2 className="h-4 w-4" />,
+  mediaGroup: <Images className="h-4 w-4" />,
 };
 
 const colorMap: Record<NodeType, string> = {
-  start: 'text-node-start',
-  message: 'text-node-message',
-  condition: 'text-node-condition',
-  buttonReply: 'text-node-button',
-  action: 'text-node-action',
-  delay: 'text-node-delay',
-  image: 'text-node-image',
-  userInput: 'text-node-userInput',
-  location: 'text-node-location',
-  httpRequest: 'text-node-httpRequest',
+  start: 'text-node-start', message: 'text-node-message', condition: 'text-node-condition',
+  buttonReply: 'text-node-button', action: 'text-node-action', delay: 'text-node-delay',
+  image: 'text-node-image', userInput: 'text-node-userInput', location: 'text-node-location',
+  httpRequest: 'text-node-httpRequest', video: 'text-node-video', audio: 'text-node-audio',
+  document: 'text-node-document', animation: 'text-node-animation', sticker: 'text-node-sticker',
+  poll: 'text-node-poll', contact: 'text-node-contact', venue: 'text-node-venue',
+  dice: 'text-node-dice', invoice: 'text-node-invoice', editMessage: 'text-node-editMessage',
+  deleteMessage: 'text-node-deleteMessage', mediaGroup: 'text-node-mediaGroup',
 };
 
 export function NodeEditorPanel() {
   const { selectedNode, setSelectedNode, updateNodeData } = useFlow();
-
   if (!selectedNode) return null;
-
   const nodeType = selectedNode.data.type;
 
   return (
     <div className="absolute right-4 top-4 z-10 w-80 rounded-xl border border-border bg-card shadow-xl animate-in slide-in-from-right-4 max-h-[calc(100vh-120px)] overflow-y-auto">
-      {/* Header */}
       <div className="flex items-center justify-between border-b border-border px-4 py-3 sticky top-0 bg-card rounded-t-xl z-10">
         <div className="flex items-center gap-2">
           <span className={colorMap[nodeType]}>{iconMap[nodeType]}</span>
           <span className="font-semibold text-foreground">{selectedNode.data.label}</span>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7"
-          onClick={() => setSelectedNode(null)}
-        >
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSelectedNode(null)}>
           <X className="h-4 w-4" />
         </Button>
       </div>
 
-      {/* Content */}
       <div className="space-y-4 p-4">
-        {/* Label field for all nodes */}
+        {/* Label */}
         <div className="space-y-2">
-          <Label htmlFor="label" className="text-xs text-muted-foreground">
-            Nome do bloco
-          </Label>
-          <Input
-            id="label"
-            value={selectedNode.data.label}
-            onChange={(e) => updateNodeData(selectedNode.id, { label: e.target.value })}
-            className="h-9"
-          />
+          <Label htmlFor="label" className="text-xs text-muted-foreground">Nome do bloco</Label>
+          <Input id="label" value={selectedNode.data.label} onChange={(e) => updateNodeData(selectedNode.id, { label: e.target.value })} className="h-9" />
         </div>
 
-        {/* Start node */}
+        {/* Start */}
         {nodeType === 'start' && (
           <div className="space-y-2">
-            <Label htmlFor="trigger" className="text-xs text-muted-foreground">
-              Comando de trigger
-            </Label>
-            <Input
-              id="trigger"
-              value={selectedNode.data.content || '/start'}
-              onChange={(e) => updateNodeData(selectedNode.id, { content: e.target.value })}
-              className="h-9 font-mono"
-              placeholder="/start"
-            />
+            <Label className="text-xs text-muted-foreground">Comando de trigger</Label>
+            <Input value={selectedNode.data.content || '/start'} onChange={(e) => updateNodeData(selectedNode.id, { content: e.target.value })} className="h-9 font-mono" placeholder="/start" />
           </div>
         )}
 
-        {/* Message node */}
+        {/* Message */}
         {nodeType === 'message' && (
           <div className="space-y-2">
-            <Label htmlFor="message" className="text-xs text-muted-foreground">
-              Mensagem
-            </Label>
-            <Textarea
-              id="message"
-              value={selectedNode.data.content || ''}
-              onChange={(e) => updateNodeData(selectedNode.id, { content: e.target.value })}
-              className="min-h-[100px] resize-none"
-              placeholder="Digite a mensagem que será enviada..."
-            />
+            <Label className="text-xs text-muted-foreground">Mensagem</Label>
+            <Textarea value={selectedNode.data.content || ''} onChange={(e) => updateNodeData(selectedNode.id, { content: e.target.value })} className="min-h-[100px] resize-none" placeholder="Digite a mensagem..." />
           </div>
         )}
 
-        {/* Condition node */}
+        {/* Condition */}
         {nodeType === 'condition' && (
           <div className="space-y-2">
-            <Label htmlFor="condition" className="text-xs text-muted-foreground">
-              Condição
-            </Label>
-            <Input
-              id="condition"
-              value={selectedNode.data.condition || ''}
-              onChange={(e) => updateNodeData(selectedNode.id, { condition: e.target.value })}
-              className="h-9 font-mono text-sm"
-              placeholder='user.message == "sim"'
-            />
-            <p className="text-[10px] text-muted-foreground">
-              Use variáveis como user.message, user.name, etc.
-            </p>
+            <Label className="text-xs text-muted-foreground">Condição</Label>
+            <Input value={selectedNode.data.condition || ''} onChange={(e) => updateNodeData(selectedNode.id, { condition: e.target.value })} className="h-9 font-mono text-sm" placeholder='user.message == "sim"' />
+            <p className="text-[10px] text-muted-foreground">Use variáveis como user.message, user.name, etc.</p>
           </div>
         )}
 
-        {/* Button Reply node */}
+        {/* Button Reply */}
         {nodeType === 'buttonReply' && (
           <div className="space-y-3">
             <div className="space-y-2">
               <Label className="text-xs text-muted-foreground">Texto da pergunta</Label>
-              <Textarea
-                value={selectedNode.data.content || ''}
-                onChange={(e) => updateNodeData(selectedNode.id, { content: e.target.value })}
-                className="min-h-[60px] resize-none"
-                placeholder="Escolha uma opção:"
-              />
+              <Textarea value={selectedNode.data.content || ''} onChange={(e) => updateNodeData(selectedNode.id, { content: e.target.value })} className="min-h-[60px] resize-none" placeholder="Escolha uma opção:" />
             </div>
-            <Label className="text-xs text-muted-foreground">Botões (cada um com saída individual)</Label>
+            <Label className="text-xs text-muted-foreground">Botões</Label>
             {selectedNode.data.buttons?.map((button, index) => (
               <div key={button.id} className="flex gap-2">
-                <Input
-                  value={button.text}
-                  onChange={(e) => {
-                    const newButtons = [...(selectedNode.data.buttons || [])];
-                    newButtons[index] = { ...newButtons[index], text: e.target.value };
-                    updateNodeData(selectedNode.id, { buttons: newButtons });
-                  }}
-                  className="h-9"
-                  placeholder={`Botão ${index + 1}`}
-                />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 shrink-0 text-destructive/70 hover:text-destructive"
-                  onClick={() => {
-                    const newButtons = selectedNode.data.buttons?.filter((_, i) => i !== index);
-                    updateNodeData(selectedNode.id, { buttons: newButtons });
-                  }}
-                >
+                <Input value={button.text} onChange={(e) => { const nb = [...(selectedNode.data.buttons || [])]; nb[index] = { ...nb[index], text: e.target.value }; updateNodeData(selectedNode.id, { buttons: nb }); }} className="h-9" placeholder={`Botão ${index + 1}`} />
+                <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 text-destructive/70 hover:text-destructive" onClick={() => updateNodeData(selectedNode.id, { buttons: selectedNode.data.buttons?.filter((_, i) => i !== index) })}>
                   <X className="h-4 w-4" />
                 </Button>
               </div>
             ))}
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full"
-              onClick={() => {
-                const newButtons = [
-                  ...(selectedNode.data.buttons || []),
-                  { id: Date.now().toString(), text: '' },
-                ];
-                updateNodeData(selectedNode.id, { buttons: newButtons });
-              }}
-            >
-              Adicionar botão
-            </Button>
-            <p className="text-[10px] text-muted-foreground">
-              Cada botão tem uma saída separada (à direita do bloco). Conecte cada uma ao próximo passo.
-            </p>
+            <Button variant="outline" size="sm" className="w-full" onClick={() => updateNodeData(selectedNode.id, { buttons: [...(selectedNode.data.buttons || []), { id: Date.now().toString(), text: '' }] })}>Adicionar botão</Button>
           </div>
         )}
 
-        {/* Action node */}
+        {/* Action */}
         {nodeType === 'action' && (
           <div className="space-y-2">
-            <Label htmlFor="action" className="text-xs text-muted-foreground">
-              Ação
-            </Label>
-            <Select
-              value={selectedNode.data.action || 'send_api_request'}
-              onValueChange={(value) => updateNodeData(selectedNode.id, { action: value })}
-            >
-              <SelectTrigger className="h-9">
-                <SelectValue />
-              </SelectTrigger>
+            <Label className="text-xs text-muted-foreground">Ação</Label>
+            <Select value={selectedNode.data.action || 'send_api_request'} onValueChange={(v) => updateNodeData(selectedNode.id, { action: v })}>
+              <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="send_api_request">Enviar requisição API</SelectItem>
                 <SelectItem value="set_variable">Definir variável</SelectItem>
@@ -206,25 +120,14 @@ export function NodeEditorPanel() {
           </div>
         )}
 
-        {/* Delay node */}
+        {/* Delay */}
         {nodeType === 'delay' && (
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground">Tempo de espera</Label>
             <div className="flex gap-2">
-              <Input
-                type="number"
-                value={selectedNode.data.delay || 5}
-                onChange={(e) => updateNodeData(selectedNode.id, { delay: parseInt(e.target.value) || 0 })}
-                className="h-9"
-                min={1}
-              />
-              <Select
-                value={selectedNode.data.delayUnit || 'seconds'}
-                onValueChange={(value) => updateNodeData(selectedNode.id, { delayUnit: value as any })}
-              >
-                <SelectTrigger className="h-9 w-32">
-                  <SelectValue />
-                </SelectTrigger>
+              <Input type="number" value={selectedNode.data.delay || 5} onChange={(e) => updateNodeData(selectedNode.id, { delay: parseInt(e.target.value) || 0 })} className="h-9" min={1} />
+              <Select value={selectedNode.data.delayUnit || 'seconds'} onValueChange={(v) => updateNodeData(selectedNode.id, { delayUnit: v as any })}>
+                <SelectTrigger className="h-9 w-32"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="seconds">Segundos</SelectItem>
                   <SelectItem value="minutes">Minutos</SelectItem>
@@ -235,171 +138,330 @@ export function NodeEditorPanel() {
           </div>
         )}
 
-        {/* Image node */}
+        {/* Image */}
         {nodeType === 'image' && (
           <div className="space-y-3">
             <div className="space-y-2">
-              <Label htmlFor="imageUrl" className="text-xs text-muted-foreground">
-                URL da Imagem
-              </Label>
-              <Input
-                id="imageUrl"
-                value={selectedNode.data.imageUrl || ''}
-                onChange={(e) => updateNodeData(selectedNode.id, { imageUrl: e.target.value })}
-                className="h-9 font-mono text-sm"
-                placeholder="https://exemplo.com/imagem.jpg"
-              />
+              <Label className="text-xs text-muted-foreground">URL da Imagem</Label>
+              <Input value={selectedNode.data.imageUrl || ''} onChange={(e) => updateNodeData(selectedNode.id, { imageUrl: e.target.value })} className="h-9 font-mono text-sm" placeholder="https://exemplo.com/imagem.jpg" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="caption" className="text-xs text-muted-foreground">
-                Legenda (opcional)
-              </Label>
-              <Textarea
-                id="caption"
-                value={selectedNode.data.caption || ''}
-                onChange={(e) => updateNodeData(selectedNode.id, { caption: e.target.value })}
-                className="min-h-[60px] resize-none"
-                placeholder="Legenda da imagem..."
-              />
+              <Label className="text-xs text-muted-foreground">Legenda (opcional)</Label>
+              <Textarea value={selectedNode.data.caption || ''} onChange={(e) => updateNodeData(selectedNode.id, { caption: e.target.value })} className="min-h-[60px] resize-none" placeholder="Legenda..." />
             </div>
           </div>
         )}
 
-        {/* User Input node */}
+        {/* User Input */}
         {nodeType === 'userInput' && (
           <div className="space-y-3">
             <div className="space-y-2">
-              <Label htmlFor="promptText" className="text-xs text-muted-foreground">
-                Pergunta para o usuário
-              </Label>
-              <Textarea
-                id="promptText"
-                value={selectedNode.data.promptText || ''}
-                onChange={(e) => updateNodeData(selectedNode.id, { promptText: e.target.value })}
-                className="min-h-[80px] resize-none"
-                placeholder="Qual é o seu nome?"
-              />
+              <Label className="text-xs text-muted-foreground">Pergunta para o usuário</Label>
+              <Textarea value={selectedNode.data.promptText || ''} onChange={(e) => updateNodeData(selectedNode.id, { promptText: e.target.value })} className="min-h-[80px] resize-none" placeholder="Qual é o seu nome?" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="variableName" className="text-xs text-muted-foreground">
-                Salvar resposta na variável
-              </Label>
-              <Input
-                id="variableName"
-                value={selectedNode.data.variableName || ''}
-                onChange={(e) => updateNodeData(selectedNode.id, { variableName: e.target.value })}
-                className="h-9 font-mono"
-                placeholder="user_name"
-              />
-              <p className="text-[10px] text-muted-foreground">
-                Use essa variável em condições ou mensagens com {'{{variável}}'}
-              </p>
+              <Label className="text-xs text-muted-foreground">Salvar resposta na variável</Label>
+              <Input value={selectedNode.data.variableName || ''} onChange={(e) => updateNodeData(selectedNode.id, { variableName: e.target.value })} className="h-9 font-mono" placeholder="user_name" />
             </div>
           </div>
         )}
 
-        {/* Location node */}
+        {/* Location */}
         {nodeType === 'location' && (
           <div className="space-y-3">
             <div className="space-y-2">
-              <Label htmlFor="locationTitle" className="text-xs text-muted-foreground">
-                Título da localização
-              </Label>
-              <Input
-                id="locationTitle"
-                value={selectedNode.data.locationTitle || ''}
-                onChange={(e) => updateNodeData(selectedNode.id, { locationTitle: e.target.value })}
-                className="h-9"
-                placeholder="Nosso escritório"
-              />
+              <Label className="text-xs text-muted-foreground">Título</Label>
+              <Input value={selectedNode.data.locationTitle || ''} onChange={(e) => updateNodeData(selectedNode.id, { locationTitle: e.target.value })} className="h-9" placeholder="Nosso escritório" />
             </div>
             <div className="flex gap-2">
               <div className="flex-1 space-y-2">
-                <Label htmlFor="latitude" className="text-xs text-muted-foreground">Latitude</Label>
-                <Input
-                  id="latitude"
-                  type="number"
-                  step="any"
-                  value={selectedNode.data.latitude || ''}
-                  onChange={(e) => updateNodeData(selectedNode.id, { latitude: parseFloat(e.target.value) || 0 })}
-                  className="h-9 font-mono text-sm"
-                  placeholder="-23.5505"
-                />
+                <Label className="text-xs text-muted-foreground">Latitude</Label>
+                <Input type="number" step="any" value={selectedNode.data.latitude || ''} onChange={(e) => updateNodeData(selectedNode.id, { latitude: parseFloat(e.target.value) || 0 })} className="h-9 font-mono text-sm" />
               </div>
               <div className="flex-1 space-y-2">
-                <Label htmlFor="longitude" className="text-xs text-muted-foreground">Longitude</Label>
-                <Input
-                  id="longitude"
-                  type="number"
-                  step="any"
-                  value={selectedNode.data.longitude || ''}
-                  onChange={(e) => updateNodeData(selectedNode.id, { longitude: parseFloat(e.target.value) || 0 })}
-                  className="h-9 font-mono text-sm"
-                  placeholder="-46.6333"
-                />
+                <Label className="text-xs text-muted-foreground">Longitude</Label>
+                <Input type="number" step="any" value={selectedNode.data.longitude || ''} onChange={(e) => updateNodeData(selectedNode.id, { longitude: parseFloat(e.target.value) || 0 })} className="h-9 font-mono text-sm" />
               </div>
             </div>
           </div>
         )}
 
-        {/* HTTP Request node */}
+        {/* HTTP Request */}
         {nodeType === 'httpRequest' && (
           <div className="space-y-3">
             <div className="flex gap-2">
               <div className="w-28 space-y-2">
                 <Label className="text-xs text-muted-foreground">Método</Label>
-                <Select
-                  value={selectedNode.data.httpMethod || 'GET'}
-                  onValueChange={(value) => updateNodeData(selectedNode.id, { httpMethod: value as any })}
-                >
-                  <SelectTrigger className="h-9">
-                    <SelectValue />
-                  </SelectTrigger>
+                <Select value={selectedNode.data.httpMethod || 'GET'} onValueChange={(v) => updateNodeData(selectedNode.id, { httpMethod: v as any })}>
+                  <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="GET">GET</SelectItem>
-                    <SelectItem value="POST">POST</SelectItem>
-                    <SelectItem value="PUT">PUT</SelectItem>
-                    <SelectItem value="DELETE">DELETE</SelectItem>
+                    <SelectItem value="GET">GET</SelectItem><SelectItem value="POST">POST</SelectItem>
+                    <SelectItem value="PUT">PUT</SelectItem><SelectItem value="DELETE">DELETE</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="flex-1 space-y-2">
-                <Label htmlFor="httpUrl" className="text-xs text-muted-foreground">URL</Label>
-                <Input
-                  id="httpUrl"
-                  value={selectedNode.data.httpUrl || ''}
-                  onChange={(e) => updateNodeData(selectedNode.id, { httpUrl: e.target.value })}
-                  className="h-9 font-mono text-sm"
-                  placeholder="https://api.exemplo.com/data"
-                />
+                <Label className="text-xs text-muted-foreground">URL</Label>
+                <Input value={selectedNode.data.httpUrl || ''} onChange={(e) => updateNodeData(selectedNode.id, { httpUrl: e.target.value })} className="h-9 font-mono text-sm" placeholder="https://api.exemplo.com" />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="httpHeaders" className="text-xs text-muted-foreground">
-                Headers (JSON)
-              </Label>
-              <Textarea
-                id="httpHeaders"
-                value={selectedNode.data.httpHeaders || ''}
-                onChange={(e) => updateNodeData(selectedNode.id, { httpHeaders: e.target.value })}
-                className="min-h-[60px] resize-none font-mono text-sm"
-                placeholder='{"Authorization": "Bearer token"}'
-              />
+              <Label className="text-xs text-muted-foreground">Headers (JSON)</Label>
+              <Textarea value={selectedNode.data.httpHeaders || ''} onChange={(e) => updateNodeData(selectedNode.id, { httpHeaders: e.target.value })} className="min-h-[60px] resize-none font-mono text-sm" placeholder='{"Authorization": "Bearer token"}' />
             </div>
             {(selectedNode.data.httpMethod === 'POST' || selectedNode.data.httpMethod === 'PUT') && (
               <div className="space-y-2">
-                <Label htmlFor="httpBody" className="text-xs text-muted-foreground">
-                  Body (JSON)
-                </Label>
-                <Textarea
-                  id="httpBody"
-                  value={selectedNode.data.httpBody || ''}
-                  onChange={(e) => updateNodeData(selectedNode.id, { httpBody: e.target.value })}
-                  className="min-h-[60px] resize-none font-mono text-sm"
-                  placeholder='{"key": "value"}'
-                />
+                <Label className="text-xs text-muted-foreground">Body (JSON)</Label>
+                <Textarea value={selectedNode.data.httpBody || ''} onChange={(e) => updateNodeData(selectedNode.id, { httpBody: e.target.value })} className="min-h-[60px] resize-none font-mono text-sm" placeholder='{"key": "value"}' />
               </div>
             )}
+          </div>
+        )}
+
+        {/* Video */}
+        {nodeType === 'video' && (
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">URL do Vídeo</Label>
+              <Input value={selectedNode.data.videoUrl || ''} onChange={(e) => updateNodeData(selectedNode.id, { videoUrl: e.target.value })} className="h-9 font-mono text-sm" placeholder="https://exemplo.com/video.mp4" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Legenda (opcional)</Label>
+              <Textarea value={selectedNode.data.caption || ''} onChange={(e) => updateNodeData(selectedNode.id, { caption: e.target.value })} className="min-h-[60px] resize-none" placeholder="Legenda do vídeo..." />
+            </div>
+          </div>
+        )}
+
+        {/* Audio */}
+        {nodeType === 'audio' && (
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">URL do Áudio</Label>
+              <Input value={selectedNode.data.audioUrl || ''} onChange={(e) => updateNodeData(selectedNode.id, { audioUrl: e.target.value })} className="h-9 font-mono text-sm" placeholder="https://exemplo.com/audio.mp3" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Legenda (opcional)</Label>
+              <Textarea value={selectedNode.data.caption || ''} onChange={(e) => updateNodeData(selectedNode.id, { caption: e.target.value })} className="min-h-[60px] resize-none" placeholder="Título do áudio..." />
+            </div>
+          </div>
+        )}
+
+        {/* Document */}
+        {nodeType === 'document' && (
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">URL do Documento</Label>
+              <Input value={selectedNode.data.documentUrl || ''} onChange={(e) => updateNodeData(selectedNode.id, { documentUrl: e.target.value })} className="h-9 font-mono text-sm" placeholder="https://exemplo.com/doc.pdf" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Nome do arquivo</Label>
+              <Input value={selectedNode.data.documentFilename || ''} onChange={(e) => updateNodeData(selectedNode.id, { documentFilename: e.target.value })} className="h-9" placeholder="relatorio.pdf" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Legenda (opcional)</Label>
+              <Textarea value={selectedNode.data.caption || ''} onChange={(e) => updateNodeData(selectedNode.id, { caption: e.target.value })} className="min-h-[60px] resize-none" placeholder="Legenda..." />
+            </div>
+          </div>
+        )}
+
+        {/* Animation/GIF */}
+        {nodeType === 'animation' && (
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">URL do GIF/Animação</Label>
+              <Input value={selectedNode.data.animationUrl || ''} onChange={(e) => updateNodeData(selectedNode.id, { animationUrl: e.target.value })} className="h-9 font-mono text-sm" placeholder="https://exemplo.com/anim.gif" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Legenda (opcional)</Label>
+              <Textarea value={selectedNode.data.caption || ''} onChange={(e) => updateNodeData(selectedNode.id, { caption: e.target.value })} className="min-h-[60px] resize-none" placeholder="Legenda..." />
+            </div>
+          </div>
+        )}
+
+        {/* Sticker */}
+        {nodeType === 'sticker' && (
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">File ID do Sticker</Label>
+            <Input value={selectedNode.data.stickerFileId || ''} onChange={(e) => updateNodeData(selectedNode.id, { stickerFileId: e.target.value })} className="h-9 font-mono text-sm" placeholder="CAACAgIAAxkB..." />
+            <p className="text-[10px] text-muted-foreground">Obtenha o file_id encaminhando um sticker para @getidsbot</p>
+          </div>
+        )}
+
+        {/* Poll */}
+        {nodeType === 'poll' && (
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Pergunta</Label>
+              <Input value={selectedNode.data.pollQuestion || ''} onChange={(e) => updateNodeData(selectedNode.id, { pollQuestion: e.target.value })} className="h-9" placeholder="Qual é sua cor favorita?" />
+            </div>
+            <Label className="text-xs text-muted-foreground">Opções</Label>
+            {(selectedNode.data.pollOptions || []).map((opt, i) => (
+              <div key={i} className="flex gap-2">
+                <Input value={opt} onChange={(e) => { const no = [...(selectedNode.data.pollOptions || [])]; no[i] = e.target.value; updateNodeData(selectedNode.id, { pollOptions: no }); }} className="h-9" placeholder={`Opção ${i + 1}`} />
+                <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 text-destructive/70" onClick={() => updateNodeData(selectedNode.id, { pollOptions: (selectedNode.data.pollOptions || []).filter((_, idx) => idx !== i) })}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+            <Button variant="outline" size="sm" className="w-full" onClick={() => updateNodeData(selectedNode.id, { pollOptions: [...(selectedNode.data.pollOptions || []), ''] })}>Adicionar opção</Button>
+            <div className="flex items-center justify-between">
+              <Label className="text-xs text-muted-foreground">Anônima</Label>
+              <Switch checked={selectedNode.data.pollIsAnonymous !== false} onCheckedChange={(v) => updateNodeData(selectedNode.id, { pollIsAnonymous: v })} />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Tipo</Label>
+              <Select value={selectedNode.data.pollType || 'regular'} onValueChange={(v) => updateNodeData(selectedNode.id, { pollType: v as any })}>
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="regular">Enquete</SelectItem>
+                  <SelectItem value="quiz">Quiz</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {selectedNode.data.pollType === 'quiz' && (
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Índice da resposta correta (0-based)</Label>
+                <Input type="number" value={selectedNode.data.pollCorrectOption ?? 0} onChange={(e) => updateNodeData(selectedNode.id, { pollCorrectOption: parseInt(e.target.value) || 0 })} className="h-9" min={0} />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Contact */}
+        {nodeType === 'contact' && (
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Telefone</Label>
+              <Input value={selectedNode.data.contactPhone || ''} onChange={(e) => updateNodeData(selectedNode.id, { contactPhone: e.target.value })} className="h-9" placeholder="+5511999999999" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Nome</Label>
+              <Input value={selectedNode.data.contactFirstName || ''} onChange={(e) => updateNodeData(selectedNode.id, { contactFirstName: e.target.value })} className="h-9" placeholder="João" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Sobrenome</Label>
+              <Input value={selectedNode.data.contactLastName || ''} onChange={(e) => updateNodeData(selectedNode.id, { contactLastName: e.target.value })} className="h-9" placeholder="Silva" />
+            </div>
+          </div>
+        )}
+
+        {/* Venue */}
+        {nodeType === 'venue' && (
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Nome do local</Label>
+              <Input value={selectedNode.data.locationTitle || ''} onChange={(e) => updateNodeData(selectedNode.id, { locationTitle: e.target.value })} className="h-9" placeholder="Restaurante XYZ" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Endereço</Label>
+              <Input value={selectedNode.data.venueAddress || ''} onChange={(e) => updateNodeData(selectedNode.id, { venueAddress: e.target.value })} className="h-9" placeholder="Rua das Flores, 123" />
+            </div>
+            <div className="flex gap-2">
+              <div className="flex-1 space-y-2">
+                <Label className="text-xs text-muted-foreground">Latitude</Label>
+                <Input type="number" step="any" value={selectedNode.data.latitude || ''} onChange={(e) => updateNodeData(selectedNode.id, { latitude: parseFloat(e.target.value) || 0 })} className="h-9 font-mono text-sm" />
+              </div>
+              <div className="flex-1 space-y-2">
+                <Label className="text-xs text-muted-foreground">Longitude</Label>
+                <Input type="number" step="any" value={selectedNode.data.longitude || ''} onChange={(e) => updateNodeData(selectedNode.id, { longitude: parseFloat(e.target.value) || 0 })} className="h-9 font-mono text-sm" />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Dice */}
+        {nodeType === 'dice' && (
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">Tipo de emoji</Label>
+            <Select value={selectedNode.data.diceEmoji || '🎲'} onValueChange={(v) => updateNodeData(selectedNode.id, { diceEmoji: v as any })}>
+              <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="🎲">🎲 Dado</SelectItem>
+                <SelectItem value="🎯">🎯 Dardo</SelectItem>
+                <SelectItem value="🏀">🏀 Basquete</SelectItem>
+                <SelectItem value="⚽">⚽ Futebol</SelectItem>
+                <SelectItem value="🎳">🎳 Boliche</SelectItem>
+                <SelectItem value="🎰">🎰 Caça-níquel</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        {/* Invoice */}
+        {nodeType === 'invoice' && (
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Título</Label>
+              <Input value={selectedNode.data.invoiceTitle || ''} onChange={(e) => updateNodeData(selectedNode.id, { invoiceTitle: e.target.value })} className="h-9" placeholder="Produto Premium" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Descrição</Label>
+              <Textarea value={selectedNode.data.invoiceDescription || ''} onChange={(e) => updateNodeData(selectedNode.id, { invoiceDescription: e.target.value })} className="min-h-[60px] resize-none" placeholder="Descrição do produto..." />
+            </div>
+            <div className="flex gap-2">
+              <div className="w-24 space-y-2">
+                <Label className="text-xs text-muted-foreground">Moeda</Label>
+                <Input value={selectedNode.data.invoiceCurrency || 'BRL'} onChange={(e) => updateNodeData(selectedNode.id, { invoiceCurrency: e.target.value })} className="h-9" />
+              </div>
+              <div className="flex-1 space-y-2">
+                <Label className="text-xs text-muted-foreground">Preço (centavos)</Label>
+                <Input type="number" value={selectedNode.data.invoicePrice || 0} onChange={(e) => updateNodeData(selectedNode.id, { invoicePrice: parseInt(e.target.value) || 0 })} className="h-9" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Provider Token</Label>
+              <Input value={selectedNode.data.invoiceProviderToken || ''} onChange={(e) => updateNodeData(selectedNode.id, { invoiceProviderToken: e.target.value })} className="h-9 font-mono text-sm" placeholder="Token do provedor de pagamento" />
+            </div>
+          </div>
+        )}
+
+        {/* Edit Message */}
+        {nodeType === 'editMessage' && (
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Message ID (variável)</Label>
+              <Input value={selectedNode.data.editMessageId || ''} onChange={(e) => updateNodeData(selectedNode.id, { editMessageId: e.target.value })} className="h-9 font-mono text-sm" placeholder="{{last_message_id}}" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Novo texto</Label>
+              <Textarea value={selectedNode.data.editText || ''} onChange={(e) => updateNodeData(selectedNode.id, { editText: e.target.value })} className="min-h-[80px] resize-none" placeholder="Novo conteúdo da mensagem..." />
+            </div>
+          </div>
+        )}
+
+        {/* Delete Message */}
+        {nodeType === 'deleteMessage' && (
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">Message ID (variável)</Label>
+            <Input value={selectedNode.data.deleteMessageId || ''} onChange={(e) => updateNodeData(selectedNode.id, { deleteMessageId: e.target.value })} className="h-9 font-mono text-sm" placeholder="{{last_message_id}}" />
+            <p className="text-[10px] text-muted-foreground">Use variáveis como {'{{last_message_id}}'} para referenciar mensagens enviadas anteriormente.</p>
+          </div>
+        )}
+
+        {/* Media Group */}
+        {nodeType === 'mediaGroup' && (
+          <div className="space-y-3">
+            <Label className="text-xs text-muted-foreground">Mídias do grupo</Label>
+            {(selectedNode.data.mediaGroupItems || []).map((item, i) => (
+              <div key={i} className="space-y-2 rounded-lg border border-border p-2">
+                <div className="flex gap-2">
+                  <Select value={item.type} onValueChange={(v) => { const ni = [...(selectedNode.data.mediaGroupItems || [])]; ni[i] = { ...ni[i], type: v as any }; updateNodeData(selectedNode.id, { mediaGroupItems: ni }); }}>
+                    <SelectTrigger className="h-8 w-24"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="photo">Foto</SelectItem>
+                      <SelectItem value="video">Vídeo</SelectItem>
+                      <SelectItem value="document">Doc</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-destructive/70" onClick={() => updateNodeData(selectedNode.id, { mediaGroupItems: (selectedNode.data.mediaGroupItems || []).filter((_, idx) => idx !== i) })}>
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+                <Input value={item.url} onChange={(e) => { const ni = [...(selectedNode.data.mediaGroupItems || [])]; ni[i] = { ...ni[i], url: e.target.value }; updateNodeData(selectedNode.id, { mediaGroupItems: ni }); }} className="h-8 text-xs font-mono" placeholder="URL da mídia" />
+                <Input value={item.caption || ''} onChange={(e) => { const ni = [...(selectedNode.data.mediaGroupItems || [])]; ni[i] = { ...ni[i], caption: e.target.value }; updateNodeData(selectedNode.id, { mediaGroupItems: ni }); }} className="h-8 text-xs" placeholder="Legenda (opcional)" />
+              </div>
+            ))}
+            <Button variant="outline" size="sm" className="w-full" onClick={() => updateNodeData(selectedNode.id, { mediaGroupItems: [...(selectedNode.data.mediaGroupItems || []), { type: 'photo', url: '', caption: '' }] })}>Adicionar mídia</Button>
           </div>
         )}
       </div>

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
-import { Node, Edge, useNodesState, useEdgesState, addEdge, Connection } from '@xyflow/react';
+import { useNodesState, useEdgesState, addEdge, Connection } from '@xyflow/react';
 import { FlowNode, FlowEdge, FlowNodeData, NodeType } from '@/types/flow';
 
 const initialNodes: FlowNode[] = [
@@ -27,6 +27,19 @@ const defaultNodeData: Record<NodeType, Partial<FlowNodeData>> = {
   userInput: { label: 'Entrada', promptText: 'Digite sua resposta:', variableName: 'user_response' },
   location: { label: 'Localização', latitude: 0, longitude: 0, locationTitle: '' },
   httpRequest: { label: 'HTTP Request', httpUrl: '', httpMethod: 'GET', httpHeaders: '', httpBody: '' },
+  video: { label: 'Vídeo', videoUrl: '', caption: '' },
+  audio: { label: 'Áudio', audioUrl: '', caption: '' },
+  document: { label: 'Documento', documentUrl: '', documentFilename: '', caption: '' },
+  animation: { label: 'GIF/Animação', animationUrl: '', caption: '' },
+  sticker: { label: 'Sticker', stickerFileId: '' },
+  poll: { label: 'Enquete', pollQuestion: '', pollOptions: ['Opção 1', 'Opção 2'], pollIsAnonymous: true, pollType: 'regular' },
+  contact: { label: 'Contato', contactPhone: '', contactFirstName: '', contactLastName: '' },
+  venue: { label: 'Venue', latitude: 0, longitude: 0, locationTitle: '', venueAddress: '' },
+  dice: { label: 'Dado', diceEmoji: '🎲' },
+  invoice: { label: 'Fatura', invoiceTitle: '', invoiceDescription: '', invoiceCurrency: 'BRL', invoicePrice: 0, invoiceProviderToken: '' },
+  editMessage: { label: 'Editar Msg', editMessageId: '', editText: '' },
+  deleteMessage: { label: 'Deletar Msg', deleteMessageId: '' },
+  mediaGroup: { label: 'Grupo de Mídia', mediaGroupItems: [] },
 };
 
 interface HistoryState {
@@ -60,47 +73,21 @@ export function FlowProvider({ children, botId }: { children: React.ReactNode; b
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNode, setSelectedNode] = useState<FlowNode | null>(null);
   
-  // History for undo/redo
   const historyRef = useRef<HistoryState[]>([{ nodes: initialNodes, edges: initialEdges }]);
   const historyIndexRef = useRef(0);
   const isUndoRedoRef = useRef(false);
 
   const saveHistory = useCallback(() => {
-    if (isUndoRedoRef.current) {
-      isUndoRedoRef.current = false;
-      return;
-    }
-    
-    // Remove future states if we're not at the end
+    if (isUndoRedoRef.current) { isUndoRedoRef.current = false; return; }
     historyRef.current = historyRef.current.slice(0, historyIndexRef.current + 1);
-    
-    // Add current state
-    historyRef.current.push({
-      nodes: JSON.parse(JSON.stringify(nodes)),
-      edges: JSON.parse(JSON.stringify(edges)),
-    });
-    
+    historyRef.current.push({ nodes: JSON.parse(JSON.stringify(nodes)), edges: JSON.parse(JSON.stringify(edges)) });
     historyIndexRef.current = historyRef.current.length - 1;
-    
-    // Limit history size
-    if (historyRef.current.length > 50) {
-      historyRef.current.shift();
-      historyIndexRef.current--;
-    }
+    if (historyRef.current.length > 50) { historyRef.current.shift(); historyIndexRef.current--; }
   }, [nodes, edges]);
 
   const onConnect = useCallback(
     (connection: Connection) => {
-      setEdges((eds) =>
-        addEdge(
-          {
-            ...connection,
-            animated: true,
-            style: { stroke: 'hsl(200, 85%, 50%)', strokeWidth: 2 },
-          },
-          eds
-        )
-      );
+      setEdges((eds) => addEdge({ ...connection, animated: true, style: { stroke: 'hsl(200, 85%, 50%)', strokeWidth: 2 } }, eds));
       setTimeout(saveHistory, 0);
     },
     [setEdges, saveHistory]
@@ -108,16 +95,7 @@ export function FlowProvider({ children, botId }: { children: React.ReactNode; b
 
   const addNode = useCallback(
     (type: NodeType, position: { x: number; y: number }) => {
-      const newNode: FlowNode = {
-        id: getNewId(),
-        type,
-        position,
-        data: {
-          type,
-          ...defaultNodeData[type],
-        } as FlowNodeData,
-      };
-
+      const newNode: FlowNode = { id: getNewId(), type, position, data: { type, ...defaultNodeData[type] } as FlowNodeData };
       setNodes((nds) => [...nds, newNode]);
       setTimeout(saveHistory, 0);
     },
@@ -126,22 +104,11 @@ export function FlowProvider({ children, botId }: { children: React.ReactNode; b
 
   const updateNodeData = useCallback(
     (nodeId: string, data: Partial<FlowNodeData>) => {
-      setNodes((nds) =>
-        nds.map((node) =>
-          node.id === nodeId
-            ? { ...node, data: { ...node.data, ...data } as FlowNodeData }
-            : node
-        )
-      );
-      
-      // Also update selectedNode if it's the one being edited
+      setNodes((nds) => nds.map((node) => node.id === nodeId ? { ...node, data: { ...node.data, ...data } as FlowNodeData } : node));
       setSelectedNode((current) => {
-        if (current && current.id === nodeId) {
-          return { ...current, data: { ...current.data, ...data } as FlowNodeData };
-        }
+        if (current && current.id === nodeId) return { ...current, data: { ...current.data, ...data } as FlowNodeData };
         return current;
       });
-      
       setTimeout(saveHistory, 0);
     },
     [setNodes, saveHistory]
@@ -177,26 +144,7 @@ export function FlowProvider({ children, botId }: { children: React.ReactNode; b
   const canRedo = historyIndexRef.current < historyRef.current.length - 1;
 
   return (
-    <FlowContext.Provider
-      value={{
-        nodes,
-        edges,
-        setNodes,
-        setEdges,
-        onNodesChange,
-        onEdgesChange,
-        onConnect,
-        addNode,
-        selectedNode,
-        setSelectedNode,
-        updateNodeData,
-        undo,
-        redo,
-        clearCanvas,
-        canUndo,
-        canRedo,
-      }}
-    >
+    <FlowContext.Provider value={{ nodes, edges, setNodes, setEdges, onNodesChange, onEdgesChange, onConnect, addNode, selectedNode, setSelectedNode, updateNodeData, undo, redo, clearCanvas, canUndo, canRedo }}>
       {children}
     </FlowContext.Provider>
   );
@@ -204,8 +152,6 @@ export function FlowProvider({ children, botId }: { children: React.ReactNode; b
 
 export function useFlow() {
   const context = useContext(FlowContext);
-  if (!context) {
-    throw new Error('useFlow must be used within a FlowProvider');
-  }
+  if (!context) throw new Error('useFlow must be used within a FlowProvider');
   return context;
 }

@@ -1,81 +1,35 @@
 import { DragItem, NodeType } from '@/types/flow';
 import {
-  Play,
-  MessageSquare,
-  GitBranch,
-  MousePointerClick,
-  Zap,
-  Timer,
-  Bot,
-  Settings,
-  ImageIcon,
-  MessageCircleQuestion,
-  MapPin,
-  Globe,
+  Play, MessageSquare, GitBranch, MousePointerClick, Zap, Timer, Bot, Settings,
+  ImageIcon, MessageCircleQuestion, MapPin, Globe, Video, Music, FileText, Film,
+  Smile, BarChart3, Phone, Home, Dices, CreditCard, Pencil, Trash2, Images,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const nodeItems: DragItem[] = [
-  {
-    type: 'start',
-    label: 'Início',
-    icon: 'play',
-    description: 'Ponto de entrada do fluxo',
-  },
-  {
-    type: 'message',
-    label: 'Mensagem',
-    icon: 'message',
-    description: 'Enviar mensagem de texto',
-  },
-  {
-    type: 'image',
-    label: 'Imagem',
-    icon: 'image',
-    description: 'Enviar foto ou imagem',
-  },
-  {
-    type: 'buttonReply',
-    label: 'Botões',
-    icon: 'button',
-    description: 'Resposta com botões (saídas individuais)',
-  },
-  {
-    type: 'userInput',
-    label: 'Entrada',
-    icon: 'userInput',
-    description: 'Aguardar resposta do usuário',
-  },
-  {
-    type: 'condition',
-    label: 'Condição',
-    icon: 'branch',
-    description: 'Desvio condicional (Se/Senão)',
-  },
-  {
-    type: 'action',
-    label: 'Ação',
-    icon: 'action',
-    description: 'Executar ação ou API',
-  },
-  {
-    type: 'httpRequest',
-    label: 'HTTP Request',
-    icon: 'httpRequest',
-    description: 'Fazer requisição HTTP/API',
-  },
-  {
-    type: 'location',
-    label: 'Localização',
-    icon: 'location',
-    description: 'Enviar localização no mapa',
-  },
-  {
-    type: 'delay',
-    label: 'Atraso',
-    icon: 'delay',
-    description: 'Aguardar antes de continuar',
-  },
+  { type: 'start', label: 'Início', icon: 'play', description: 'Ponto de entrada do fluxo' },
+  { type: 'message', label: 'Mensagem', icon: 'message', description: 'Enviar mensagem de texto' },
+  { type: 'image', label: 'Imagem', icon: 'image', description: 'Enviar foto ou imagem' },
+  { type: 'video', label: 'Vídeo', icon: 'video', description: 'Enviar vídeo ou nota de vídeo' },
+  { type: 'audio', label: 'Áudio', icon: 'audio', description: 'Enviar áudio ou voz' },
+  { type: 'document', label: 'Documento', icon: 'document', description: 'Enviar documento ou arquivo' },
+  { type: 'animation', label: 'GIF', icon: 'animation', description: 'Enviar animação ou GIF' },
+  { type: 'sticker', label: 'Sticker', icon: 'sticker', description: 'Enviar adesivo' },
+  { type: 'buttonReply', label: 'Botões', icon: 'button', description: 'Resposta com botões' },
+  { type: 'userInput', label: 'Entrada', icon: 'userInput', description: 'Aguardar resposta do usuário' },
+  { type: 'condition', label: 'Condição', icon: 'branch', description: 'Desvio condicional' },
+  { type: 'poll', label: 'Enquete', icon: 'poll', description: 'Enviar enquete ou quiz' },
+  { type: 'contact', label: 'Contato', icon: 'contact', description: 'Enviar ou solicitar contato' },
+  { type: 'venue', label: 'Venue', icon: 'venue', description: 'Enviar local com endereço' },
+  { type: 'location', label: 'Localização', icon: 'location', description: 'Enviar localização no mapa' },
+  { type: 'dice', label: 'Dado', icon: 'dice', description: 'Enviar dado ou emoji animado' },
+  { type: 'invoice', label: 'Fatura', icon: 'invoice', description: 'Enviar fatura para pagamento' },
+  { type: 'editMessage', label: 'Editar Msg', icon: 'editMessage', description: 'Editar mensagem existente' },
+  { type: 'deleteMessage', label: 'Deletar Msg', icon: 'deleteMessage', description: 'Deletar mensagem' },
+  { type: 'mediaGroup', label: 'Grupo Mídia', icon: 'mediaGroup', description: 'Enviar grupo de mídias' },
+  { type: 'action', label: 'Ação', icon: 'action', description: 'Executar ação ou API' },
+  { type: 'httpRequest', label: 'HTTP Request', icon: 'httpRequest', description: 'Fazer requisição HTTP/API' },
+  { type: 'delay', label: 'Atraso', icon: 'delay', description: 'Aguardar antes de continuar' },
 ];
 
 const iconMap: Record<string, React.ReactNode> = {
@@ -89,6 +43,19 @@ const iconMap: Record<string, React.ReactNode> = {
   userInput: <MessageCircleQuestion className="h-4 w-4" />,
   location: <MapPin className="h-4 w-4" />,
   httpRequest: <Globe className="h-4 w-4" />,
+  video: <Video className="h-4 w-4" />,
+  audio: <Music className="h-4 w-4" />,
+  document: <FileText className="h-4 w-4" />,
+  animation: <Film className="h-4 w-4" />,
+  sticker: <Smile className="h-4 w-4" />,
+  poll: <BarChart3 className="h-4 w-4" />,
+  contact: <Phone className="h-4 w-4" />,
+  venue: <Home className="h-4 w-4" />,
+  dice: <Dices className="h-4 w-4" />,
+  invoice: <CreditCard className="h-4 w-4" />,
+  editMessage: <Pencil className="h-4 w-4" />,
+  deleteMessage: <Trash2 className="h-4 w-4" />,
+  mediaGroup: <Images className="h-4 w-4" />,
 };
 
 const colorMap: Record<NodeType, string> = {
@@ -102,6 +69,19 @@ const colorMap: Record<NodeType, string> = {
   userInput: 'border-node-userInput/40 hover:border-node-userInput/70 text-node-userInput bg-node-userInput/5 hover:bg-node-userInput/10',
   location: 'border-node-location/40 hover:border-node-location/70 text-node-location bg-node-location/5 hover:bg-node-location/10',
   httpRequest: 'border-node-httpRequest/40 hover:border-node-httpRequest/70 text-node-httpRequest bg-node-httpRequest/5 hover:bg-node-httpRequest/10',
+  video: 'border-node-video/40 hover:border-node-video/70 text-node-video bg-node-video/5 hover:bg-node-video/10',
+  audio: 'border-node-audio/40 hover:border-node-audio/70 text-node-audio bg-node-audio/5 hover:bg-node-audio/10',
+  document: 'border-node-document/40 hover:border-node-document/70 text-node-document bg-node-document/5 hover:bg-node-document/10',
+  animation: 'border-node-animation/40 hover:border-node-animation/70 text-node-animation bg-node-animation/5 hover:bg-node-animation/10',
+  sticker: 'border-node-sticker/40 hover:border-node-sticker/70 text-node-sticker bg-node-sticker/5 hover:bg-node-sticker/10',
+  poll: 'border-node-poll/40 hover:border-node-poll/70 text-node-poll bg-node-poll/5 hover:bg-node-poll/10',
+  contact: 'border-node-contact/40 hover:border-node-contact/70 text-node-contact bg-node-contact/5 hover:bg-node-contact/10',
+  venue: 'border-node-venue/40 hover:border-node-venue/70 text-node-venue bg-node-venue/5 hover:bg-node-venue/10',
+  dice: 'border-node-dice/40 hover:border-node-dice/70 text-node-dice bg-node-dice/5 hover:bg-node-dice/10',
+  invoice: 'border-node-invoice/40 hover:border-node-invoice/70 text-node-invoice bg-node-invoice/5 hover:bg-node-invoice/10',
+  editMessage: 'border-node-editMessage/40 hover:border-node-editMessage/70 text-node-editMessage bg-node-editMessage/5 hover:bg-node-editMessage/10',
+  deleteMessage: 'border-node-deleteMessage/40 hover:border-node-deleteMessage/70 text-node-deleteMessage bg-node-deleteMessage/5 hover:bg-node-deleteMessage/10',
+  mediaGroup: 'border-node-mediaGroup/40 hover:border-node-mediaGroup/70 text-node-mediaGroup bg-node-mediaGroup/5 hover:bg-node-mediaGroup/10',
 };
 
 export function NodesSidebar() {
@@ -115,7 +95,6 @@ export function NodesSidebar() {
 
   return (
     <aside className="flex h-full w-72 flex-col border-r border-border bg-sidebar">
-      {/* Header */}
       <div className="flex items-center gap-3 border-b border-border px-5 py-4">
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/15">
           <Bot className="h-5 w-5 text-primary" />
@@ -126,7 +105,6 @@ export function NodesSidebar() {
         </div>
       </div>
 
-      {/* Back to Dashboard */}
       <div className="border-b border-border px-4 py-3">
         <button
           onClick={() => navigate('/dashboard')}
@@ -140,7 +118,6 @@ export function NodesSidebar() {
         </button>
       </div>
 
-      {/* Nodes */}
       <div className="flex-1 overflow-y-auto px-4 py-4">
         <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
           Blocos
@@ -165,13 +142,11 @@ export function NodesSidebar() {
         </div>
       </div>
 
-      {/* Footer */}
       <div className="border-t border-border px-4 py-3">
         <p className="text-center text-[10px] text-muted-foreground">
           Arraste os blocos para o canvas →
         </p>
       </div>
-
     </aside>
   );
 }
