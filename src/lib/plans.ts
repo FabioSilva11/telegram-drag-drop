@@ -1,0 +1,41 @@
+export const PLANS = {
+  starter: {
+    name: 'Starter',
+    price: 'Grátis',
+    priceId: null,
+    productId: null,
+    maxBots: 1,
+    maxMessagesPerDay: 50,
+    features: ['Editor visual', '50 mensagens/dia', '1 bot', 'Suporte comunidade'],
+  },
+  pro: {
+    name: 'Pro',
+    price: 'R$ 49/mês',
+    priceId: 'price_1SzVwxKvkCUCDLj5ZIYXL6U6',
+    productId: 'prod_TxQoP3fOGx10AH',
+    maxBots: 5,
+    maxMessagesPerDay: Infinity,
+    features: ['Tudo do Starter', 'Mensagens ilimitadas', '5 bots', 'APIs externas', 'Suporte prioritário'],
+  },
+  enterprise: {
+    name: 'Enterprise',
+    price: 'R$ 149/mês',
+    priceId: 'price_1SzVxAKvkCUCDLj5GM467AeX',
+    productId: 'prod_TxQoQZOZqdtyug',
+    maxBots: 11,
+    maxMessagesPerDay: Infinity,
+    features: ['Tudo do Pro', 'Mensagens ilimitadas', '11 bots', 'White-label', 'Webhooks avançados', 'Suporte dedicado'],
+  },
+} as const;
+
+export type PlanKey = keyof typeof PLANS;
+
+export function getPlanByProductId(productId: string | null): PlanKey {
+  if (productId === PLANS.enterprise.productId) return 'enterprise';
+  if (productId === PLANS.pro.productId) return 'pro';
+  return 'starter';
+}
+
+export function getPlanLimits(plan: PlanKey) {
+  return PLANS[plan];
+}
