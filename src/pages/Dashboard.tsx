@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSubscription } from '@/hooks/useSubscription';
 import { supabase } from '@/integrations/supabase/client';
+import { PLANS } from '@/lib/plans';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
-import { Bot, Plus, Pencil, Trash2, LogOut, Loader2 } from 'lucide-react';
+import { Bot, Plus, Pencil, Trash2, LogOut, Loader2, Crown, Settings } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface BotRecord {
@@ -21,6 +23,7 @@ interface BotRecord {
 
 export default function Dashboard() {
   const { user, signOut, loading: authLoading } = useAuth();
+  const { plan, subscribed, loading: subLoading, refresh: refreshSub } = useSubscription();
   const navigate = useNavigate();
   const [bots, setBots] = useState<BotRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,6 +32,9 @@ export default function Dashboard() {
   const [newBotToken, setNewBotToken] = useState('');
   const [creating, setCreating] = useState(false);
   const [profile, setProfile] = useState<{ display_name: string | null } | null>(null);
+
+  const planLimits = PLANS[plan];
+  const canCreateBot = bots.length < planLimits.maxBots;
 
   useEffect(() => {
     if (!authLoading && !user) navigate('/auth');
@@ -40,6 +46,16 @@ export default function Dashboard() {
       fetchProfile();
     }
   }, [user]);
+
+  // Check for checkout success
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('checkout') === 'success') {
+      toast.success('Assinatura ativada com sucesso!');
+      refreshSub();
+      window.history.replaceState({}, '', '/dashboard');
+    }
+  }, []);
 
   const fetchProfile = async () => {
     const { data } = await supabase
@@ -61,6 +77,10 @@ export default function Dashboard() {
 
   const createBot = async () => {
     if (!newBotName.trim()) return;
+    if (!canCreateBot) {
+      toast.error(`Seu plano ${planLimits.name} permite no máximo ${planLimits.maxBots} bot(s). Faça upgrade!`);
+      return;
+    }
     setCreating(true);
     const { error } = await supabase.from('bots').insert({
       name: newBotName.trim(),
@@ -87,12 +107,32 @@ export default function Dashboard() {
     }
   };
 
+  const handleUpgrade = async (priceId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { priceId },
+      });
+      if (error) throw error;
+      if (data?.url) window.open(data.url, '_blank');
+    } catch {
+      toast.error('Erro ao iniciar checkout');
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('customer-portal');
+      if (error) throw error;
+      if (data?.url) window.open(data.url, '_blank');
+    } catch {
+      toast.error('Erro ao abrir portal');
+    }
+  };
+
   const maskToken = (token: string | null) => {
     if (!token) return '—';
     return '••••••' + token.slice(-6);
   };
-
-  const activeBots = bots.filter((b) => b.is_active).length;
 
   if (authLoading || !user) return null;
 
@@ -108,6 +148,15 @@ export default function Dashboard() {
             <span className="text-lg font-bold">FlowBot</span>
           </div>
           <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Crown className="h-4 w-4 text-primary" />
+              <span className="text-xs font-medium text-primary">{planLimits.name}</span>
+            </div>
+            {subscribed && (
+              <Button variant="ghost" size="sm" onClick={handleManageSubscription} className="gap-1 text-xs">
+                <Settings className="h-3.5 w-3.5" /> Gerenciar
+              </Button>
+            )}
             <span className="text-sm text-muted-foreground">{profile?.display_name || user.email}</span>
             <Button variant="ghost" size="icon" onClick={() => { signOut(); navigate('/'); }}>
               <LogOut className="h-4 w-4" />
@@ -120,9 +169,9 @@ export default function Dashboard() {
         {/* Stats */}
         <div className="mb-8 grid gap-4 sm:grid-cols-3">
           {[
-            { label: 'Total de Bots', value: bots.length },
-            { label: 'Bots Ativos', value: activeBots },
-            { label: 'Saldo', value: 'R$ 0.00' },
+            { label: 'Total de Bots', value: `${bots.length} / ${planLimits.maxBots}` },
+            { label: 'Plano Atual', value: planLimits.name },
+            { label: 'Msgs/Dia', value: planLimits.maxMessagesPerDay === Infinity ? 'Ilimitadas' : planLimits.maxMessagesPerDay },
           ].map((s) => (
             <div key={s.label} className="rounded-xl border border-border bg-card p-5">
               <p className="text-xs text-muted-foreground">{s.label}</p>
@@ -131,10 +180,32 @@ export default function Dashboard() {
           ))}
         </div>
 
+        {/* Upgrade Banner */}
+        {plan === 'starter' && (
+          <div className="mb-8 rounded-xl border border-primary/30 bg-primary/5 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <p className="font-semibold text-primary">🚀 Faça upgrade para criar mais bots!</p>
+              <p className="text-sm text-muted-foreground">Plano Pro: 5 bots + msgs ilimitadas por R$49/mês</p>
+            </div>
+            <Button onClick={() => handleUpgrade(PLANS.pro.priceId!)} className="bg-primary text-primary-foreground whitespace-nowrap">
+              Upgrade Pro
+            </Button>
+          </div>
+        )}
+
         {/* Bot List */}
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-bold">Meus Bots</h2>
-          <Button onClick={() => setDialogOpen(true)} className="gap-2 bg-primary text-primary-foreground">
+          <Button
+            onClick={() => {
+              if (!canCreateBot) {
+                toast.error(`Limite de ${planLimits.maxBots} bot(s) atingido. Faça upgrade!`);
+                return;
+              }
+              setDialogOpen(true);
+            }}
+            className="gap-2 bg-primary text-primary-foreground"
+          >
             <Plus className="h-4 w-4" /> Novo Bot
           </Button>
         </div>
@@ -192,7 +263,11 @@ export default function Dashboard() {
         <DialogContent className="border-border bg-card sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Criar Novo Bot</DialogTitle>
-            <DialogDescription>Dê um nome ao bot e opcionalmente insira o token do Telegram.</DialogDescription>
+            <DialogDescription>
+              {canCreateBot
+                ? `Dê um nome ao bot e opcionalmente insira o token. (${bots.length}/${planLimits.maxBots} bots)`
+                : `Limite atingido! Faça upgrade para criar mais bots.`}
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
@@ -213,7 +288,7 @@ export default function Dashboard() {
                 className="border-border bg-secondary font-mono text-xs"
               />
             </div>
-            <Button onClick={createBot} disabled={creating || !newBotName.trim()} className="w-full bg-primary text-primary-foreground">
+            <Button onClick={createBot} disabled={creating || !newBotName.trim() || !canCreateBot} className="w-full bg-primary text-primary-foreground">
               {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Criar Bot'}
             </Button>
           </div>
