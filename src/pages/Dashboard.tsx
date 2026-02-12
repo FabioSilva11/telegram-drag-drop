@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
-import { Bot, Plus, Pencil, Trash2, LogOut, Loader2, Crown, Settings } from 'lucide-react';
+import { Bot, Plus, Pencil, Trash2, LogOut, Loader2, Crown, Settings, BarChart3, Check } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface BotRecord {
@@ -28,6 +28,7 @@ export default function Dashboard() {
   const [bots, setBots] = useState<BotRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
   const [newBotName, setNewBotName] = useState('');
   const [newBotToken, setNewBotToken] = useState('');
   const [creating, setCreating] = useState(false);
@@ -41,13 +42,9 @@ export default function Dashboard() {
   }, [user, authLoading, navigate]);
 
   useEffect(() => {
-    if (user) {
-      fetchBots();
-      fetchProfile();
-    }
+    if (user) { fetchBots(); fetchProfile(); }
   }, [user]);
 
-  // Check for checkout success
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('checkout') === 'success') {
@@ -58,19 +55,12 @@ export default function Dashboard() {
   }, []);
 
   const fetchProfile = async () => {
-    const { data } = await supabase
-      .from('profiles')
-      .select('display_name')
-      .eq('user_id', user!.id)
-      .maybeSingle();
+    const { data } = await supabase.from('profiles').select('display_name').eq('user_id', user!.id).maybeSingle();
     setProfile(data);
   };
 
   const fetchBots = async () => {
-    const { data, error } = await supabase
-      .from('bots')
-      .select('*')
-      .order('created_at', { ascending: false });
+    const { data, error } = await supabase.from('bots').select('*').order('created_at', { ascending: false });
     if (!error && data) setBots(data as BotRecord[]);
     setLoading(false);
   };
@@ -82,41 +72,23 @@ export default function Dashboard() {
       return;
     }
     setCreating(true);
-    const { error } = await supabase.from('bots').insert({
-      name: newBotName.trim(),
-      telegram_token: newBotToken.trim() || null,
-      user_id: user!.id,
-    });
-    if (error) {
-      toast.error('Erro ao criar bot');
-    } else {
-      toast.success('Bot criado!');
-      setDialogOpen(false);
-      setNewBotName('');
-      setNewBotToken('');
-      fetchBots();
-    }
+    const { error } = await supabase.from('bots').insert({ name: newBotName.trim(), telegram_token: newBotToken.trim() || null, user_id: user!.id });
+    if (error) toast.error('Erro ao criar bot');
+    else { toast.success('Bot criado!'); setDialogOpen(false); setNewBotName(''); setNewBotToken(''); fetchBots(); }
     setCreating(false);
   };
 
   const deleteBot = async (id: string) => {
     const { error } = await supabase.from('bots').delete().eq('id', id);
-    if (!error) {
-      toast.success('Bot removido');
-      fetchBots();
-    }
+    if (!error) { toast.success('Bot removido'); fetchBots(); }
   };
 
   const handleUpgrade = async (priceId: string) => {
     try {
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { priceId },
-      });
+      const { data, error } = await supabase.functions.invoke('create-checkout', { body: { priceId } });
       if (error) throw error;
       if (data?.url) window.open(data.url, '_blank');
-    } catch {
-      toast.error('Erro ao iniciar checkout');
-    }
+    } catch { toast.error('Erro ao iniciar checkout'); }
   };
 
   const handleManageSubscription = async () => {
@@ -124,9 +96,7 @@ export default function Dashboard() {
       const { data, error } = await supabase.functions.invoke('customer-portal');
       if (error) throw error;
       if (data?.url) window.open(data.url, '_blank');
-    } catch {
-      toast.error('Erro ao abrir portal');
-    }
+    } catch { toast.error('Erro ao abrir portal'); }
   };
 
   const maskToken = (token: string | null) => {
@@ -138,7 +108,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="border-b border-border bg-card/80 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2">
@@ -184,11 +153,11 @@ export default function Dashboard() {
         {plan === 'starter' && (
           <div className="mb-8 rounded-xl border border-primary/30 bg-primary/5 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <p className="font-semibold text-primary">🚀 Faça upgrade para criar mais bots!</p>
-              <p className="text-sm text-muted-foreground">Plano Pro: 5 bots + msgs ilimitadas por R$49/mês</p>
+              <p className="font-semibold text-primary">🚀 Faça upgrade para desbloquear mais recursos!</p>
+              <p className="text-sm text-muted-foreground">Mais bots, mensagens ilimitadas e blocos avançados.</p>
             </div>
-            <Button onClick={() => handleUpgrade(PLANS.pro.priceId!)} className="bg-primary text-primary-foreground whitespace-nowrap">
-              Upgrade Pro
+            <Button onClick={() => setUpgradeDialogOpen(true)} className="bg-primary text-primary-foreground whitespace-nowrap">
+              Ver Planos
             </Button>
           </div>
         )}
@@ -198,10 +167,7 @@ export default function Dashboard() {
           <h2 className="text-xl font-bold">Meus Bots</h2>
           <Button
             onClick={() => {
-              if (!canCreateBot) {
-                toast.error(`Limite de ${planLimits.maxBots} bot(s) atingido. Faça upgrade!`);
-                return;
-              }
+              if (!canCreateBot) { toast.error(`Limite de ${planLimits.maxBots} bot(s) atingido. Faça upgrade!`); return; }
               setDialogOpen(true);
             }}
             className="gap-2 bg-primary text-primary-foreground"
@@ -235,20 +201,13 @@ export default function Dashboard() {
                 </div>
                 <p className="mb-4 text-xs text-muted-foreground">Token: {maskToken(bot.telegram_token)}</p>
                 <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 gap-1.5 border-border text-xs"
-                    onClick={() => navigate(`/editor/${bot.id}`)}
-                  >
+                  <Button variant="outline" size="sm" className="flex-1 gap-1.5 border-border text-xs" onClick={() => navigate(`/editor/${bot.id}`)}>
                     <Pencil className="h-3.5 w-3.5" /> Editar Fluxo
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-9 w-9 text-destructive hover:bg-destructive/10"
-                    onClick={() => deleteBot(bot.id)}
-                  >
+                  <Button variant="outline" size="sm" className="gap-1.5 border-border text-xs" onClick={() => navigate(`/analytics/${bot.id}`)}>
+                    <BarChart3 className="h-3.5 w-3.5" /> Analytics
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-destructive/10" onClick={() => deleteBot(bot.id)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -272,25 +231,51 @@ export default function Dashboard() {
           <div className="space-y-4 py-2">
             <div className="space-y-2">
               <Label className="text-xs text-muted-foreground">Nome do Bot</Label>
-              <Input
-                placeholder="Meu Bot de Vendas"
-                value={newBotName}
-                onChange={(e) => setNewBotName(e.target.value)}
-                className="border-border bg-secondary"
-              />
+              <Input placeholder="Meu Bot de Vendas" value={newBotName} onChange={(e) => setNewBotName(e.target.value)} className="border-border bg-secondary" />
             </div>
             <div className="space-y-2">
               <Label className="text-xs text-muted-foreground">Token do Telegram (opcional)</Label>
-              <Input
-                placeholder="123456789:ABCdef..."
-                value={newBotToken}
-                onChange={(e) => setNewBotToken(e.target.value)}
-                className="border-border bg-secondary font-mono text-xs"
-              />
+              <Input placeholder="123456789:ABCdef..." value={newBotToken} onChange={(e) => setNewBotToken(e.target.value)} className="border-border bg-secondary font-mono text-xs" />
             </div>
             <Button onClick={createBot} disabled={creating || !newBotName.trim() || !canCreateBot} className="w-full bg-primary text-primary-foreground">
               {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Criar Bot'}
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Upgrade Dialog */}
+      <Dialog open={upgradeDialogOpen} onOpenChange={setUpgradeDialogOpen}>
+        <DialogContent className="border-border bg-card sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Escolha seu Plano</DialogTitle>
+            <DialogDescription>Faça upgrade para desbloquear mais recursos</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 sm:grid-cols-2 py-4">
+            {(['pro', 'enterprise'] as const).map((key) => {
+              const p = PLANS[key];
+              return (
+                <div key={key} className={`rounded-xl border p-5 ${key === 'pro' ? 'border-primary bg-primary/5' : 'border-border'}`}>
+                  {key === 'pro' && <p className="text-xs font-bold text-primary mb-2">🔥 Mais Popular</p>}
+                  <h3 className="font-bold text-lg">{p.name}</h3>
+                  <p className="text-2xl font-bold mt-1">{p.price}</p>
+                  <ul className="mt-4 space-y-2">
+                    {p.features.map((f) => (
+                      <li key={f} className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Check className="h-3.5 w-3.5 text-primary shrink-0" /> {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <Button
+                    className={`w-full mt-4 ${key === 'pro' ? 'bg-primary text-primary-foreground' : ''}`}
+                    variant={key === 'pro' ? 'default' : 'outline'}
+                    onClick={() => { handleUpgrade(p.priceId!); setUpgradeDialogOpen(false); }}
+                  >
+                    Assinar {p.name}
+                  </Button>
+                </div>
+              );
+            })}
           </div>
         </DialogContent>
       </Dialog>

@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Bot, MessageSquare, GitBranch, Zap, Timer, Shield, Briefcase, Star,
   ArrowRight, Sparkles, Check, Users, TrendingUp, Clock, DollarSign, Lock,
-  ChevronRight, AlertTriangle,
+  ChevronRight, Rocket, Globe, Eye, Target, Heart, Award,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import editorPreview from '@/assets/editor-preview.jpg';
 
 const urgencyReasons = [
   { icon: Users, title: 'Atendimento infinito sem contratar ninguém', desc: 'Economize horas e dinheiro com bots que respondem 24h.' },
@@ -37,6 +38,20 @@ const testimonials = [
   { text: '"Editor visual incrível. Comecei grátis e migrei pro Pro na semana."', name: 'Rafael S.', role: 'Dev Freelancer', stars: 5 },
 ];
 
+const howItWorks = [
+  { step: '01', title: 'Crie sua conta', desc: 'Cadastre-se gratuitamente em menos de 30 segundos.' },
+  { step: '02', title: 'Monte seu fluxo', desc: 'Arraste e solte blocos no editor visual para criar a lógica do bot.' },
+  { step: '03', title: 'Conecte ao Telegram', desc: 'Insira seu token do BotFather e publique em um clique.' },
+  { step: '04', title: 'Lucre no automático', desc: 'Seu bot atende, vende e engaja 24/7 sem parar.' },
+];
+
+const metrics = [
+  { value: '22M+', label: 'Usuários de Telegram no Brasil' },
+  { value: '98%', label: 'Taxa de abertura de mensagens' },
+  { value: '24/7', label: 'Atendimento automatizado' },
+  { value: '3x', label: 'Aumento médio em vendas' },
+];
+
 const faqs = [
   { q: 'Por que Telegram e não WhatsApp?', a: 'O Telegram permite bots poderosos nativamente, canais ilimitados e tem engajamento muito maior. Sem precisar de APIs pagas ou aprovação.' },
   { q: 'Preciso programar?', a: 'Não! Arraste e solte blocos no editor visual. Sem uma linha de código.' },
@@ -44,39 +59,6 @@ const faqs = [
   { q: 'E se eu não usar agora?', a: 'Concorrentes capturam clientes 24h enquanto você responde manualmente. Cada dia sem automação é dinheiro perdido.' },
   { q: 'Posso cancelar a qualquer momento?', a: 'Sim! Cancele quando quiser sem burocracia. Sem fidelidade.' },
 ];
-
-function CountdownTimer() {
-  const [time, setTime] = useState({ d: 3, h: 12, m: 47, s: 33 });
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTime(prev => {
-        let { d, h, m, s } = prev;
-        s--;
-        if (s < 0) { s = 59; m--; }
-        if (m < 0) { m = 59; h--; }
-        if (h < 0) { h = 23; d--; }
-        if (d < 0) return { d: 0, h: 0, m: 0, s: 0 };
-        return { d, h, m, s };
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const pad = (n: number) => String(n).padStart(2, '0');
-
-  return (
-    <div className="inline-flex items-center gap-1 text-sm font-mono">
-      <span className="rounded bg-primary/20 px-2 py-1 text-primary font-bold">{pad(time.d)}d</span>
-      <span className="text-muted-foreground">:</span>
-      <span className="rounded bg-primary/20 px-2 py-1 text-primary font-bold">{pad(time.h)}h</span>
-      <span className="text-muted-foreground">:</span>
-      <span className="rounded bg-primary/20 px-2 py-1 text-primary font-bold">{pad(time.m)}m</span>
-      <span className="text-muted-foreground">:</span>
-      <span className="rounded bg-primary/20 px-2 py-1 text-primary font-bold">{pad(time.s)}s</span>
-    </div>
-  );
-}
 
 export default function Landing() {
   return (
@@ -108,8 +90,8 @@ export default function Landing() {
         <div className="absolute inset-0 bg-gradient-to-b from-[#00BFFF]/5 via-transparent to-transparent" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[600px] w-[600px] rounded-full bg-[#00BFFF]/5 blur-[120px]" />
         <div className="relative mx-auto max-w-4xl text-center">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#00BFFF]/30 bg-[#00BFFF]/10 px-4 py-1.5 text-sm text-[#00BFFF] animate-pulse">
-            <AlertTriangle className="h-4 w-4" /> Aviso Urgente – Fevereiro 2026
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#00BFFF]/30 bg-[#00BFFF]/10 px-4 py-1.5 text-sm text-[#00BFFF]">
+            <Rocket className="h-4 w-4" /> Plataforma No-Code para Bots Telegram
           </div>
 
           <h1 className="mb-6 text-4xl font-extrabold leading-tight text-white sm:text-5xl md:text-6xl lg:text-7xl">
@@ -134,15 +116,33 @@ export default function Landing() {
               size="lg"
               className="gap-2 bg-[#00BFFF] text-black font-bold text-base sm:text-lg px-8 py-6 rounded-xl hover:bg-[#33ccff] transition-all hover:scale-105 shadow-[0_0_30px_rgba(0,191,255,0.3)]"
             >
-              Criar Minha Conta Grátis + Pegar 50% OFF Agora <ArrowRight className="h-5 w-5" />
+              Criar Minha Conta Grátis <ArrowRight className="h-5 w-5" />
             </Button>
           </Link>
+        </div>
+      </section>
 
-          <div className="mt-4 flex flex-col items-center gap-2">
-            <p className="text-sm text-[#00BFFF]/80 font-medium animate-pulse">
-              ⚡ Promoção de 50% OFF no 1º mês acaba em poucos dias – vagas limitadas!
-            </p>
-            <CountdownTimer />
+      {/* Metrics */}
+      <section className="border-t border-white/5 px-6 py-16">
+        <div className="mx-auto grid max-w-5xl grid-cols-2 gap-8 sm:grid-cols-4">
+          {metrics.map((m) => (
+            <div key={m.label} className="text-center">
+              <p className="text-3xl font-extrabold text-[#00BFFF]">{m.value}</p>
+              <p className="mt-1 text-sm text-white/50">{m.label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Editor Preview */}
+      <section className="border-t border-white/5 px-6 py-20">
+        <div className="mx-auto max-w-5xl">
+          <h2 className="mb-4 text-center text-3xl sm:text-4xl font-bold text-white">
+            Editor Visual <span className="text-[#00BFFF]">Intuitivo</span>
+          </h2>
+          <p className="mb-10 text-center text-white/50">Arraste, solte e conecte blocos — sem código, sem complicação.</p>
+          <div className="relative rounded-2xl border border-white/10 bg-white/[0.02] p-2 shadow-[0_0_60px_rgba(0,191,255,0.08)]">
+            <img src={editorPreview} alt="FlowBot Editor Visual - Interface de criação de bots" className="w-full rounded-xl" />
           </div>
         </div>
       </section>
@@ -162,6 +162,27 @@ export default function Landing() {
                 </div>
                 <h3 className="mb-2 font-semibold text-white">{r.title}</h3>
                 <p className="text-sm text-white/50">{r.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="border-t border-white/5 px-6 py-20">
+        <div className="mx-auto max-w-4xl">
+          <h2 className="mb-4 text-center text-3xl sm:text-4xl font-bold text-white">
+            Como <span className="text-[#00BFFF]">Funciona</span>
+          </h2>
+          <p className="mb-12 text-center text-white/50">4 passos simples para automatizar seu negócio</p>
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            {howItWorks.map((s) => (
+              <div key={s.step} className="text-center">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#00BFFF]/10 text-xl font-bold text-[#00BFFF]">
+                  {s.step}
+                </div>
+                <h3 className="mb-2 font-semibold text-white">{s.title}</h3>
+                <p className="text-sm text-white/50">{s.desc}</p>
               </div>
             ))}
           </div>
@@ -193,7 +214,7 @@ export default function Landing() {
       <section className="border-t border-white/5 px-6 py-20">
         <div className="mx-auto max-w-5xl">
           <h2 className="mb-4 text-center text-3xl sm:text-4xl font-bold text-white">
-            Planos & Preços – <span className="text-[#00BFFF]">Escolha Agora</span> Antes que a Oferta Acabe!
+            Planos & <span className="text-[#00BFFF]">Preços</span>
           </h2>
           <p className="mb-12 text-center text-white/50">Comece grátis, escale quando quiser</p>
           <div className="grid gap-6 sm:grid-cols-3">
@@ -289,12 +310,9 @@ export default function Landing() {
               size="lg"
               className="gap-2 bg-[#00BFFF] text-black font-bold text-base px-8 py-6 rounded-xl hover:bg-[#33ccff] transition-all hover:scale-105 shadow-[0_0_30px_rgba(0,191,255,0.3)]"
             >
-              Criar Conta Grátis + 50% OFF <Sparkles className="h-5 w-5" />
+              Criar Conta Grátis Agora <Sparkles className="h-5 w-5" />
             </Button>
           </Link>
-          <p className="mt-4 text-sm text-[#00BFFF]/70 font-medium animate-pulse">
-            ⚡ Ação Urgente: Promoção acaba em poucos dias.
-          </p>
         </div>
       </section>
 

@@ -1,4 +1,5 @@
 import { X, MessageSquare, GitBranch, MousePointerClick, Zap, Timer, Play, ImageIcon, MessageCircleQuestion, MapPin, Globe, Video, Music, FileText, Film, Smile, BarChart3, Phone, Home, Dices, CreditCard, Pencil, Trash2, Images } from 'lucide-react';
+import { FileUploadField } from './FileUploadField';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -141,10 +142,7 @@ export function NodeEditorPanel() {
         {/* Image */}
         {nodeType === 'image' && (
           <div className="space-y-3">
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">URL da Imagem</Label>
-              <Input value={selectedNode.data.imageUrl || ''} onChange={(e) => updateNodeData(selectedNode.id, { imageUrl: e.target.value })} className="h-9 font-mono text-sm" placeholder="https://exemplo.com/imagem.jpg" />
-            </div>
+            <FileUploadField label="Imagem" value={selectedNode.data.imageUrl || ''} onChange={(url) => updateNodeData(selectedNode.id, { imageUrl: url })} accept="image/*" placeholder="https://exemplo.com/imagem.jpg" />
             <div className="space-y-2">
               <Label className="text-xs text-muted-foreground">Legenda (opcional)</Label>
               <Textarea value={selectedNode.data.caption || ''} onChange={(e) => updateNodeData(selectedNode.id, { caption: e.target.value })} className="min-h-[60px] resize-none" placeholder="Legenda..." />
@@ -221,10 +219,7 @@ export function NodeEditorPanel() {
         {/* Video */}
         {nodeType === 'video' && (
           <div className="space-y-3">
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">URL do Vídeo</Label>
-              <Input value={selectedNode.data.videoUrl || ''} onChange={(e) => updateNodeData(selectedNode.id, { videoUrl: e.target.value })} className="h-9 font-mono text-sm" placeholder="https://exemplo.com/video.mp4" />
-            </div>
+            <FileUploadField label="Vídeo" value={selectedNode.data.videoUrl || ''} onChange={(url) => updateNodeData(selectedNode.id, { videoUrl: url })} accept="video/*" placeholder="https://exemplo.com/video.mp4" />
             <div className="space-y-2">
               <Label className="text-xs text-muted-foreground">Legenda (opcional)</Label>
               <Textarea value={selectedNode.data.caption || ''} onChange={(e) => updateNodeData(selectedNode.id, { caption: e.target.value })} className="min-h-[60px] resize-none" placeholder="Legenda do vídeo..." />
@@ -235,10 +230,7 @@ export function NodeEditorPanel() {
         {/* Audio */}
         {nodeType === 'audio' && (
           <div className="space-y-3">
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">URL do Áudio</Label>
-              <Input value={selectedNode.data.audioUrl || ''} onChange={(e) => updateNodeData(selectedNode.id, { audioUrl: e.target.value })} className="h-9 font-mono text-sm" placeholder="https://exemplo.com/audio.mp3" />
-            </div>
+            <FileUploadField label="Áudio" value={selectedNode.data.audioUrl || ''} onChange={(url) => updateNodeData(selectedNode.id, { audioUrl: url })} accept="audio/*" placeholder="https://exemplo.com/audio.mp3" />
             <div className="space-y-2">
               <Label className="text-xs text-muted-foreground">Legenda (opcional)</Label>
               <Textarea value={selectedNode.data.caption || ''} onChange={(e) => updateNodeData(selectedNode.id, { caption: e.target.value })} className="min-h-[60px] resize-none" placeholder="Título do áudio..." />
@@ -249,10 +241,7 @@ export function NodeEditorPanel() {
         {/* Document */}
         {nodeType === 'document' && (
           <div className="space-y-3">
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">URL do Documento</Label>
-              <Input value={selectedNode.data.documentUrl || ''} onChange={(e) => updateNodeData(selectedNode.id, { documentUrl: e.target.value })} className="h-9 font-mono text-sm" placeholder="https://exemplo.com/doc.pdf" />
-            </div>
+            <FileUploadField label="Documento" value={selectedNode.data.documentUrl || ''} onChange={(url) => updateNodeData(selectedNode.id, { documentUrl: url })} accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt" placeholder="https://exemplo.com/doc.pdf" />
             <div className="space-y-2">
               <Label className="text-xs text-muted-foreground">Nome do arquivo</Label>
               <Input value={selectedNode.data.documentFilename || ''} onChange={(e) => updateNodeData(selectedNode.id, { documentFilename: e.target.value })} className="h-9" placeholder="relatorio.pdf" />
@@ -267,10 +256,7 @@ export function NodeEditorPanel() {
         {/* Animation/GIF */}
         {nodeType === 'animation' && (
           <div className="space-y-3">
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">URL do GIF/Animação</Label>
-              <Input value={selectedNode.data.animationUrl || ''} onChange={(e) => updateNodeData(selectedNode.id, { animationUrl: e.target.value })} className="h-9 font-mono text-sm" placeholder="https://exemplo.com/anim.gif" />
-            </div>
+            <FileUploadField label="GIF/Animação" value={selectedNode.data.animationUrl || ''} onChange={(url) => updateNodeData(selectedNode.id, { animationUrl: url })} accept="image/gif,.gif" placeholder="https://exemplo.com/anim.gif" />
             <div className="space-y-2">
               <Label className="text-xs text-muted-foreground">Legenda (opcional)</Label>
               <Textarea value={selectedNode.data.caption || ''} onChange={(e) => updateNodeData(selectedNode.id, { caption: e.target.value })} className="min-h-[60px] resize-none" placeholder="Legenda..." />
