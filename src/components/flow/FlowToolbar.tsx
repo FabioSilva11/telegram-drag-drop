@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Save, Undo2, Redo2, Trash2, Play, Square, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useFlow } from '@/contexts/FlowContext';
+import { useSubscription } from '@/hooks/useSubscription';
+import { canUseAI } from '@/lib/planLimits';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { AIFlowDialog } from './AIFlowDialog';
@@ -12,6 +14,7 @@ import {
 
 export function FlowToolbar({ botId }: { botId?: string } = {}) {
   const { nodes, edges, undo, redo, clearCanvas, canUndo, canRedo } = useFlow();
+  const { plan } = useSubscription();
   const [isPublishing, setIsPublishing] = useState(false);
   const [isBotActive, setIsBotActive] = useState(false);
 
@@ -66,7 +69,19 @@ export function FlowToolbar({ botId }: { botId?: string } = {}) {
           </AlertDialogContent>
         </AlertDialog>
         <div className="mx-2 h-5 w-px bg-border" />
-        <AIFlowDialog />
+        {canUseAI(plan) ? (
+          <AIFlowDialog />
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5 text-xs border-border text-muted-foreground opacity-60 cursor-not-allowed"
+            onClick={() => toast.error('Recurso disponível apenas no plano Pro ou superior.')}
+          >
+            <span className="h-3.5 w-3.5">🔒</span>
+            Gerar com IA (Pro)
+          </Button>
+        )}
       </div>
 
       <div className="flex items-center gap-4">

@@ -2,22 +2,25 @@ import { DragItem, NodeType } from '@/types/flow';
 import {
   Play, MessageSquare, GitBranch, MousePointerClick, Zap, Timer, Bot, Settings,
   ImageIcon, MessageCircleQuestion, MapPin, Globe, Video, Music, FileText, Film,
-  Smile, BarChart3, Phone, Home, Dices, CreditCard, Pencil, Trash2, Images,
+  Smile, BarChart3, Phone, Home, Dices, CreditCard, Pencil, Trash2, Images, Lock,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useSubscription } from '@/hooks/useSubscription';
+import { isBlockLocked } from '@/lib/planLimits';
+import { toast } from 'sonner';
 
 const nodeItems: DragItem[] = [
   { type: 'start', label: 'Início', icon: 'play', description: 'Ponto de entrada do fluxo' },
   { type: 'message', label: 'Mensagem', icon: 'message', description: 'Enviar mensagem de texto' },
   { type: 'image', label: 'Imagem', icon: 'image', description: 'Enviar foto ou imagem' },
+  { type: 'buttonReply', label: 'Botões', icon: 'button', description: 'Resposta com botões' },
+  { type: 'userInput', label: 'Entrada', icon: 'userInput', description: 'Aguardar resposta do usuário' },
+  { type: 'condition', label: 'Condição', icon: 'branch', description: 'Desvio condicional' },
   { type: 'video', label: 'Vídeo', icon: 'video', description: 'Enviar vídeo ou nota de vídeo' },
   { type: 'audio', label: 'Áudio', icon: 'audio', description: 'Enviar áudio ou voz' },
   { type: 'document', label: 'Documento', icon: 'document', description: 'Enviar documento ou arquivo' },
   { type: 'animation', label: 'GIF', icon: 'animation', description: 'Enviar animação ou GIF' },
   { type: 'sticker', label: 'Sticker', icon: 'sticker', description: 'Enviar adesivo' },
-  { type: 'buttonReply', label: 'Botões', icon: 'button', description: 'Resposta com botões' },
-  { type: 'userInput', label: 'Entrada', icon: 'userInput', description: 'Aguardar resposta do usuário' },
-  { type: 'condition', label: 'Condição', icon: 'branch', description: 'Desvio condicional' },
   { type: 'poll', label: 'Enquete', icon: 'poll', description: 'Enviar enquete ou quiz' },
   { type: 'contact', label: 'Contato', icon: 'contact', description: 'Enviar ou solicitar contato' },
   { type: 'venue', label: 'Venue', icon: 'venue', description: 'Enviar local com endereço' },
@@ -86,8 +89,14 @@ const colorMap: Record<NodeType, string> = {
 
 export function NodesSidebar() {
   const navigate = useNavigate();
+  const { plan } = useSubscription();
 
   const onDragStart = (event: React.DragEvent, nodeType: NodeType) => {
+    if (isBlockLocked(nodeType, plan)) {
+      event.preventDefault();
+      toast.error('Bloco disponível apenas no plano Pro ou superior. Faça upgrade!');
+      return;
+    }
     event.dataTransfer.setData('application/reactflow', nodeType);
     event.dataTransfer.setData('text/plain', nodeType);
     event.dataTransfer.effectAllowed = 'move';
@@ -123,22 +132,30 @@ export function NodesSidebar() {
           Blocos
         </h2>
         <div className="space-y-2">
-          {nodeItems.map((item) => (
-            <div
-              key={item.type}
-              draggable
-              onDragStart={(e) => onDragStart(e, item.type)}
-              className={`flex cursor-grab items-center gap-3 rounded-lg border px-3 py-2.5 transition-all active:cursor-grabbing ${colorMap[item.type]}`}
-            >
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-current/20 bg-current/10">
-                {iconMap[item.icon]}
+          {nodeItems.map((item) => {
+            const locked = isBlockLocked(item.type, plan);
+            return (
+              <div
+                key={item.type}
+                draggable={!locked}
+                onDragStart={(e) => onDragStart(e, item.type)}
+                className={`flex items-center gap-3 rounded-lg border px-3 py-2.5 transition-all ${
+                  locked
+                    ? 'cursor-not-allowed opacity-50 border-border bg-muted/5'
+                    : `cursor-grab active:cursor-grabbing ${colorMap[item.type]}`
+                }`}
+              >
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-current/20 bg-current/10">
+                  {iconMap[item.icon]}
+                </div>
+                <div className="flex-1">
+                  <span className="block text-sm font-medium">{item.label}</span>
+                  <span className="block text-[10px] text-muted-foreground">{item.description}</span>
+                </div>
+                {locked && <Lock className="h-3.5 w-3.5 text-muted-foreground" />}
               </div>
-              <div>
-                <span className="block text-sm font-medium">{item.label}</span>
-                <span className="block text-[10px] text-muted-foreground">{item.description}</span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
