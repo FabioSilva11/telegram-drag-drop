@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { lovable } from '@/integrations/lovable/index';
 import { Button } from '@/components/ui/button';
@@ -107,6 +107,11 @@ export default function Auth() {
           <Button type="submit" disabled={loading} className="w-full bg-primary text-primary-foreground">
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : isLogin ? 'Entrar' : 'Criar Conta'}
           </Button>
+          {isLogin && (
+            <Link to="/forgot-password" className="block text-center text-xs text-muted-foreground hover:text-primary mt-2">
+              Esqueceu sua senha?
+            </Link>
+          )}
         </form>
 
         <button onClick={() => setIsLogin(!isLogin)} className="mt-4 w-full text-center text-sm text-muted-foreground hover:text-primary">

@@ -121,11 +121,6 @@ export default function Dashboard() {
               <Crown className="h-4 w-4 text-primary" />
               <span className="text-xs font-medium text-primary">{planLimits.name}</span>
             </div>
-            {subscribed && (
-              <Button variant="ghost" size="sm" onClick={handleManageSubscription} className="gap-1 text-xs">
-                <Settings className="h-3.5 w-3.5" /> Gerenciar
-              </Button>
-            )}
             <span className="text-sm text-muted-foreground">{profile?.display_name || user.email}</span>
             <Button variant="ghost" size="icon" onClick={() => { signOut(); navigate('/'); }}>
               <LogOut className="h-4 w-4" />
