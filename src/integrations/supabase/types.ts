@@ -58,6 +58,39 @@ export type Database = {
           },
         ]
       }
+      bot_messages: {
+        Row: {
+          bot_id: string
+          created_at: string
+          direction: string
+          flow_id: string
+          id: string
+          message_text: string | null
+          node_type: string | null
+          telegram_chat_id: number
+        }
+        Insert: {
+          bot_id: string
+          created_at?: string
+          direction?: string
+          flow_id: string
+          id?: string
+          message_text?: string | null
+          node_type?: string | null
+          telegram_chat_id: number
+        }
+        Update: {
+          bot_id?: string
+          created_at?: string
+          direction?: string
+          flow_id?: string
+          id?: string
+          message_text?: string | null
+          node_type?: string | null
+          telegram_chat_id?: number
+        }
+        Relationships: []
+      }
       bot_sessions: {
         Row: {
           created_at: string

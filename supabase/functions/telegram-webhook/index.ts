@@ -67,69 +67,138 @@ function evalCondition(cond: string, msg: string, vars: Record<string, any>): bo
   } catch { return false; }
 }
 
-async function continueFrom(nodeId: string, nodes: FlowNode[], edges: FlowEdge[], token: string, chatId: number, msg: string, vars: Record<string, any>, sb: any, flowId: string) {
+// Log a message to bot_messages for analytics and limit tracking
+async function logMessage(sb: any, botId: string, flowId: string, chatId: number, direction: string, text: string | null, nodeType: string | null) {
+  await sb.from("bot_messages").insert({
+    bot_id: botId,
+    flow_id: flowId,
+    telegram_chat_id: chatId,
+    direction,
+    message_text: text || null,
+    node_type: nodeType,
+  });
+}
+
+// Check daily message limit for a bot's owner
+async function checkDailyLimit(sb: any, botId: string): Promise<{ allowed: boolean; count: number; limit: number }> {
+  // Get bot owner
+  const { data: bot } = await sb.from("bots").select("user_id").eq("id", botId).maybeSingle();
+  if (!bot) return { allowed: false, count: 0, limit: 0 };
+
+  // Check subscription
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  // Count today's messages for ALL bots of this user
+  const { data: userBots } = await sb.from("bots").select("id").eq("user_id", bot.user_id);
+  const botIds = userBots?.map((b: any) => b.id) || [];
+  
+  const { count } = await sb
+    .from("bot_messages")
+    .select("*", { count: "exact", head: true })
+    .in("bot_id", botIds)
+    .gte("created_at", today.toISOString());
+
+  // For now, free plan = 50 msgs/day. Paid plans = unlimited.
+  // We check subscription status - if not subscribed, limit to 50
+  const limit = 50; // Free plan limit
+  
+  // TODO: Check actual subscription via Stripe. For now, assume free plan.
+  // Paid users will have unlimited, so we return allowed: true if subscribed.
+  
+  return { allowed: (count || 0) < limit, count: count || 0, limit };
+}
+
+async function continueFrom(nodeId: string, nodes: FlowNode[], edges: FlowEdge[], token: string, chatId: number, msg: string, vars: Record<string, any>, sb: any, flowId: string, botId: string) {
   for (const nid of findNextNodes(edges, nodeId)) {
     const n = findNode(nodes, nid);
-    if (n) await processNode(n, nodes, edges, token, chatId, msg, vars, sb, flowId);
+    if (n) await processNode(n, nodes, edges, token, chatId, msg, vars, sb, flowId, botId);
   }
 }
 
-async function processNode(node: FlowNode, nodes: FlowNode[], edges: FlowEdge[], token: string, chatId: number, msg: string, vars: Record<string, any>, sb: any, flowId: string): Promise<void> {
+async function processNode(node: FlowNode, nodes: FlowNode[], edges: FlowEdge[], token: string, chatId: number, msg: string, vars: Record<string, any>, sb: any, flowId: string, botId: string): Promise<void> {
   const d = node.data;
   switch (node.type) {
     case "start":
-      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId);
+      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId, botId);
       break;
     case "message":
       if (d.content) {
         const result = await tgCall(token, "sendMessage", { chat_id: chatId, text: replaceVars(d.content, vars), parse_mode: "HTML" });
         if (result.result?.message_id) vars.last_message_id = result.result.message_id;
+        await logMessage(sb, botId, flowId, chatId, "outgoing", d.content, "message");
       }
-      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId);
+      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId, botId);
       break;
     case "image":
-      if (d.imageUrl) await tgCall(token, "sendPhoto", { chat_id: chatId, photo: d.imageUrl, caption: d.caption ? replaceVars(d.caption, vars) : undefined });
-      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId);
+      if (d.imageUrl) {
+        await tgCall(token, "sendPhoto", { chat_id: chatId, photo: d.imageUrl, caption: d.caption ? replaceVars(d.caption, vars) : undefined });
+        await logMessage(sb, botId, flowId, chatId, "outgoing", d.caption || "image", "image");
+      }
+      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId, botId);
       break;
     case "video":
-      if (d.videoUrl) await tgCall(token, "sendVideo", { chat_id: chatId, video: d.videoUrl, caption: d.caption ? replaceVars(d.caption, vars) : undefined });
-      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId);
+      if (d.videoUrl) {
+        await tgCall(token, "sendVideo", { chat_id: chatId, video: d.videoUrl, caption: d.caption ? replaceVars(d.caption, vars) : undefined });
+        await logMessage(sb, botId, flowId, chatId, "outgoing", d.caption || "video", "video");
+      }
+      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId, botId);
       break;
     case "audio":
-      if (d.audioUrl) await tgCall(token, "sendAudio", { chat_id: chatId, audio: d.audioUrl, caption: d.caption ? replaceVars(d.caption, vars) : undefined });
-      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId);
+      if (d.audioUrl) {
+        await tgCall(token, "sendAudio", { chat_id: chatId, audio: d.audioUrl, caption: d.caption ? replaceVars(d.caption, vars) : undefined });
+        await logMessage(sb, botId, flowId, chatId, "outgoing", null, "audio");
+      }
+      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId, botId);
       break;
     case "document":
-      if (d.documentUrl) await tgCall(token, "sendDocument", { chat_id: chatId, document: d.documentUrl, caption: d.caption ? replaceVars(d.caption, vars) : undefined });
-      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId);
+      if (d.documentUrl) {
+        await tgCall(token, "sendDocument", { chat_id: chatId, document: d.documentUrl, caption: d.caption ? replaceVars(d.caption, vars) : undefined });
+        await logMessage(sb, botId, flowId, chatId, "outgoing", null, "document");
+      }
+      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId, botId);
       break;
     case "animation":
-      if (d.animationUrl) await tgCall(token, "sendAnimation", { chat_id: chatId, animation: d.animationUrl, caption: d.caption ? replaceVars(d.caption, vars) : undefined });
-      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId);
+      if (d.animationUrl) {
+        await tgCall(token, "sendAnimation", { chat_id: chatId, animation: d.animationUrl, caption: d.caption ? replaceVars(d.caption, vars) : undefined });
+        await logMessage(sb, botId, flowId, chatId, "outgoing", null, "animation");
+      }
+      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId, botId);
       break;
     case "sticker":
-      if (d.stickerFileId) await tgCall(token, "sendSticker", { chat_id: chatId, sticker: d.stickerFileId });
-      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId);
+      if (d.stickerFileId) {
+        await tgCall(token, "sendSticker", { chat_id: chatId, sticker: d.stickerFileId });
+        await logMessage(sb, botId, flowId, chatId, "outgoing", null, "sticker");
+      }
+      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId, botId);
       break;
     case "poll":
       if (d.pollQuestion && d.pollOptions?.length >= 2) {
         const body: any = { chat_id: chatId, question: replaceVars(d.pollQuestion, vars), options: d.pollOptions.map((o: string) => replaceVars(o, vars)), is_anonymous: d.pollIsAnonymous !== false, type: d.pollType || "regular" };
         if (d.pollType === "quiz" && d.pollCorrectOption !== undefined) body.correct_option_id = d.pollCorrectOption;
         await tgCall(token, "sendPoll", body);
+        await logMessage(sb, botId, flowId, chatId, "outgoing", d.pollQuestion, "poll");
       }
-      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId);
+      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId, botId);
       break;
     case "contact":
-      if (d.contactPhone && d.contactFirstName) await tgCall(token, "sendContact", { chat_id: chatId, phone_number: replaceVars(d.contactPhone, vars), first_name: replaceVars(d.contactFirstName, vars), last_name: d.contactLastName ? replaceVars(d.contactLastName, vars) : undefined });
-      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId);
+      if (d.contactPhone && d.contactFirstName) {
+        await tgCall(token, "sendContact", { chat_id: chatId, phone_number: replaceVars(d.contactPhone, vars), first_name: replaceVars(d.contactFirstName, vars), last_name: d.contactLastName ? replaceVars(d.contactLastName, vars) : undefined });
+        await logMessage(sb, botId, flowId, chatId, "outgoing", null, "contact");
+      }
+      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId, botId);
       break;
     case "venue":
-      if (d.latitude && d.longitude && d.locationTitle && d.venueAddress) await tgCall(token, "sendVenue", { chat_id: chatId, latitude: d.latitude, longitude: d.longitude, title: replaceVars(d.locationTitle, vars), address: replaceVars(d.venueAddress, vars) });
-      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId);
+      if (d.latitude && d.longitude && d.locationTitle && d.venueAddress) {
+        await tgCall(token, "sendVenue", { chat_id: chatId, latitude: d.latitude, longitude: d.longitude, title: replaceVars(d.locationTitle, vars), address: replaceVars(d.venueAddress, vars) });
+        await logMessage(sb, botId, flowId, chatId, "outgoing", null, "venue");
+      }
+      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId, botId);
       break;
     case "dice":
       await tgCall(token, "sendDice", { chat_id: chatId, emoji: d.diceEmoji || "🎲" });
-      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId);
+      await logMessage(sb, botId, flowId, chatId, "outgoing", null, "dice");
+      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId, botId);
       break;
     case "invoice":
       if (d.invoiceTitle && d.invoiceDescription && d.invoicePrice) {
@@ -138,22 +207,24 @@ async function processNode(node: FlowNode, nodes: FlowNode[], edges: FlowEdge[],
           payload: `invoice_${node.id}`, provider_token: d.invoiceProviderToken || "",
           currency: d.invoiceCurrency || "BRL", prices: [{ label: d.invoiceTitle, amount: d.invoicePrice }],
         });
+        await logMessage(sb, botId, flowId, chatId, "outgoing", d.invoiceTitle, "invoice");
       }
-      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId);
+      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId, botId);
       break;
     case "editMessage":
       if (d.editText) {
         const msgId = d.editMessageId ? replaceVars(d.editMessageId, vars) : vars.last_message_id;
         if (msgId) await tgCall(token, "editMessageText", { chat_id: chatId, message_id: parseInt(msgId), text: replaceVars(d.editText, vars), parse_mode: "HTML" });
+        await logMessage(sb, botId, flowId, chatId, "outgoing", d.editText, "editMessage");
       }
-      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId);
+      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId, botId);
       break;
     case "deleteMessage":
       if (d.deleteMessageId || vars.last_message_id) {
         const msgId = d.deleteMessageId ? replaceVars(d.deleteMessageId, vars) : vars.last_message_id;
         if (msgId) await tgCall(token, "deleteMessage", { chat_id: chatId, message_id: parseInt(msgId) });
       }
-      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId);
+      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId, botId);
       break;
     case "mediaGroup":
       if (d.mediaGroupItems?.length >= 2) {
@@ -163,30 +234,38 @@ async function processNode(node: FlowNode, nodes: FlowNode[], edges: FlowEdge[],
           caption: item.caption ? replaceVars(item.caption, vars) : undefined,
         }));
         await tgCall(token, "sendMediaGroup", { chat_id: chatId, media });
+        await logMessage(sb, botId, flowId, chatId, "outgoing", null, "mediaGroup");
       }
-      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId);
+      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId, botId);
       break;
     case "buttonReply":
       if (d.buttons?.length > 0) {
         const text = d.content ? replaceVars(d.content, vars) : d.label || "Escolha:";
         await tgCall(token, "sendMessage", { chat_id: chatId, text, reply_markup: { inline_keyboard: d.buttons.map((b: any) => [{ text: b.text, callback_data: b.id }]) } });
+        await logMessage(sb, botId, flowId, chatId, "outgoing", text, "buttonReply");
         await sb.from("bot_sessions").upsert({ flow_id: flowId, telegram_chat_id: chatId, current_node_id: node.id, variables: vars }, { onConflict: "flow_id,telegram_chat_id" });
       }
       break;
     case "userInput":
-      if (d.promptText) await tgCall(token, "sendMessage", { chat_id: chatId, text: replaceVars(d.promptText, vars) });
+      if (d.promptText) {
+        await tgCall(token, "sendMessage", { chat_id: chatId, text: replaceVars(d.promptText, vars) });
+        await logMessage(sb, botId, flowId, chatId, "outgoing", d.promptText, "userInput");
+      }
       await sb.from("bot_sessions").upsert({ flow_id: flowId, telegram_chat_id: chatId, current_node_id: node.id, variables: vars }, { onConflict: "flow_id,telegram_chat_id" });
       break;
     case "condition": {
       const result = evalCondition(d.condition || "", msg, vars);
       const outs = edges.filter((e) => e.source === node.id);
       const next = result ? outs.find((e) => e.sourceHandle === "yes") || outs[0] : outs.find((e) => e.sourceHandle === "no") || outs[1];
-      if (next) { const nn = findNode(nodes, next.target); if (nn) await processNode(nn, nodes, edges, token, chatId, msg, vars, sb, flowId); }
+      if (next) { const nn = findNode(nodes, next.target); if (nn) await processNode(nn, nodes, edges, token, chatId, msg, vars, sb, flowId, botId); }
       break;
     }
     case "location":
-      if (d.latitude && d.longitude) await tgCall(token, "sendLocation", { chat_id: chatId, latitude: d.latitude, longitude: d.longitude });
-      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId);
+      if (d.latitude && d.longitude) {
+        await tgCall(token, "sendLocation", { chat_id: chatId, latitude: d.latitude, longitude: d.longitude });
+        await logMessage(sb, botId, flowId, chatId, "outgoing", null, "location");
+      }
+      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId, botId);
       break;
     case "httpRequest":
       if (d.httpUrl) {
@@ -203,7 +282,7 @@ async function processNode(node: FlowNode, nodes: FlowNode[], edges: FlowEdge[],
           try { vars.http_json = JSON.parse(rd); } catch {}
         } catch (err) { vars.http_error = String(err); }
       }
-      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId);
+      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId, botId);
       break;
     case "delay": {
       const delay = d.delay || 1;
@@ -213,12 +292,12 @@ async function processNode(node: FlowNode, nodes: FlowNode[], edges: FlowEdge[],
       if (unit === "hours") ms = delay * 60 * 60 * 1000;
       ms = Math.min(ms, 25000);
       await new Promise((r) => setTimeout(r, ms));
-      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId);
+      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId, botId);
       break;
     }
     case "action":
       console.log(`Action: ${d.action} for chat ${chatId}`);
-      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId);
+      await continueFrom(node.id, nodes, edges, token, chatId, msg, vars, sb, flowId, botId);
       break;
   }
 }
@@ -227,8 +306,13 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    
+    // Extract botId from URL query parameter
+    const url = new URL(req.url);
+    const botId = url.searchParams.get("botId");
+    
     const update: TelegramUpdate = await req.json();
-    console.log("Telegram update:", JSON.stringify(update));
+    console.log("Telegram update for bot:", botId, JSON.stringify(update));
 
     let chatId: number | undefined;
     let msg = "";
@@ -247,15 +331,36 @@ Deno.serve(async (req) => {
 
     if (!chatId) return new Response(JSON.stringify({ ok: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-    const { data: flows } = await sb.from("bot_flows").select("*, bots!bot_flows_bot_id_fkey(telegram_token)").eq("is_active", true);
+    // Build query - filter by specific bot if botId is provided
+    let flowQuery = sb.from("bot_flows").select("*, bots!bot_flows_bot_id_fkey(telegram_token, id)").eq("is_active", true);
+    if (botId) {
+      flowQuery = flowQuery.eq("bot_id", botId);
+    }
+    
+    const { data: flows } = await flowQuery;
     if (!flows?.length) return new Response(JSON.stringify({ ok: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     for (const flow of flows) {
-      const token = (flow as any).bots?.telegram_token;
+      const bot = (flow as any).bots;
+      const token = bot?.telegram_token;
+      const currentBotId = bot?.id || botId || flow.bot_id;
       if (!token) continue;
       const nodes: FlowNode[] = flow.nodes as any;
       const edges: FlowEdge[] = flow.edges as any;
       const flowId = flow.id;
+
+      // Log incoming message
+      await logMessage(sb, currentBotId, flowId, chatId, "incoming", msg, null);
+
+      // Check daily message limit
+      const limitCheck = await checkDailyLimit(sb, currentBotId);
+      if (!limitCheck.allowed) {
+        await tgCall(token, "sendMessage", { 
+          chat_id: chatId, 
+          text: `⚠️ Limite diário de mensagens atingido (${limitCheck.count}/${limitCheck.limit}). O proprietário do bot precisa fazer upgrade do plano para continuar.` 
+        });
+        return new Response(JSON.stringify({ ok: true, limit_reached: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
 
       if (isCb) await tgCall(token, "answerCallbackQuery", { callback_query_id: update.callback_query!.id });
 
@@ -269,14 +374,14 @@ Deno.serve(async (req) => {
           const se = edges.filter((e) => e.source === cur.id && e.sourceHandle === handle);
           const edgesToFollow = se.length > 0 ? se : edges.filter((e) => e.source === cur.id && e.sourceHandle === "default");
           const vars = { ...session.variables, last_button: cbData };
-          for (const e of edgesToFollow) { const nn = findNode(nodes, e.target); if (nn) await processNode(nn, nodes, edges, token, chatId, cbData, vars, sb, flowId); }
+          for (const e of edgesToFollow) { const nn = findNode(nodes, e.target); if (nn) await processNode(nn, nodes, edges, token, chatId, cbData, vars, sb, flowId, currentBotId); }
           await sb.from("bot_sessions").delete().eq("flow_id", flowId).eq("telegram_chat_id", chatId);
           break;
         } else if (!isCb && cur?.type === "userInput") {
           const vn = cur.data.variableName || "user_response";
           const vars = { ...session.variables, [vn]: msg };
           await sb.from("bot_sessions").delete().eq("flow_id", flowId).eq("telegram_chat_id", chatId);
-          await continueFrom(cur.id, nodes, edges, token, chatId, msg, vars, sb, flowId);
+          await continueFrom(cur.id, nodes, edges, token, chatId, msg, vars, sb, flowId, currentBotId);
           break;
         }
       } else {
@@ -285,7 +390,7 @@ Deno.serve(async (req) => {
           const trigger = start.data.content || "/start";
           if (msg === trigger || msg === "/start") {
             await sb.from("bot_sessions").delete().eq("flow_id", flowId).eq("telegram_chat_id", chatId);
-            await processNode(start, nodes, edges, token, chatId, msg, {}, sb, flowId);
+            await processNode(start, nodes, edges, token, chatId, msg, {}, sb, flowId, currentBotId);
             break;
           }
         }

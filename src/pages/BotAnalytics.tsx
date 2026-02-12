@@ -3,14 +3,24 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Bot, MessageSquare, Users, TrendingUp, BarChart3 } from 'lucide-react';
+import { ArrowLeft, Bot, MessageSquare, Users, TrendingUp, BarChart3, MessageCircle } from 'lucide-react';
+
+interface DailyData {
+  date: string;
+  incoming: number;
+  outgoing: number;
+}
 
 export default function BotAnalytics() {
   const { botId } = useParams<{ botId: string }>();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [botName, setBotName] = useState('');
-  const [sessionCount, setSessionCount] = useState(0);
+  const [totalIncoming, setTotalIncoming] = useState(0);
+  const [totalOutgoing, setTotalOutgoing] = useState(0);
+  const [uniqueUsers, setUniqueUsers] = useState(0);
+  const [todayMessages, setTodayMessages] = useState(0);
+  const [dailyData, setDailyData] = useState<DailyData[]>([]);
 
   useEffect(() => {
     if (!authLoading && !user) navigate('/auth');
@@ -29,26 +39,56 @@ export default function BotAnalytics() {
   };
 
   const fetchAnalytics = async () => {
-    // Count sessions from bot_flows linked to this bot
-    const { data: flows } = await supabase.from('bot_flows').select('id').eq('bot_id', botId!);
-    if (flows && flows.length > 0) {
-      const flowIds = flows.map(f => f.id);
-      const { count } = await supabase
-        .from('bot_sessions')
-        .select('*', { count: 'exact', head: true })
-        .in('flow_id', flowIds);
-      setSessionCount(count || 0);
+    // Fetch all messages for this bot
+    const { data: messages } = await supabase
+      .from('bot_messages')
+      .select('direction, telegram_chat_id, created_at')
+      .eq('bot_id', botId!);
+
+    if (!messages || messages.length === 0) return;
+
+    const incoming = messages.filter(m => m.direction === 'incoming').length;
+    const outgoing = messages.filter(m => m.direction === 'outgoing').length;
+    const uniqueChats = new Set(messages.map(m => m.telegram_chat_id)).size;
+
+    setTotalIncoming(incoming);
+    setTotalOutgoing(outgoing);
+    setUniqueUsers(uniqueChats);
+
+    // Today's messages
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayCount = messages.filter(m => new Date(m.created_at) >= today).length;
+    setTodayMessages(todayCount);
+
+    // Build daily data for last 7 days
+    const daily: Record<string, { incoming: number; outgoing: number }> = {};
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().split('T')[0];
+      daily[key] = { incoming: 0, outgoing: 0 };
     }
+    messages.forEach(m => {
+      const key = m.created_at.split('T')[0];
+      if (daily[key]) {
+        if (m.direction === 'incoming') daily[key].incoming++;
+        else daily[key].outgoing++;
+      }
+    });
+    setDailyData(Object.entries(daily).map(([date, d]) => ({ date, ...d })));
   };
 
   if (authLoading || !user) return null;
 
   const stats = [
-    { label: 'Sessões Ativas', value: sessionCount, icon: Users, color: 'text-primary' },
-    { label: 'Mensagens Enviadas', value: '—', icon: MessageSquare, color: 'text-node-message' },
-    { label: 'Taxa de Conclusão', value: '—', icon: TrendingUp, color: 'text-node-start' },
-    { label: 'Conversões', value: '—', icon: BarChart3, color: 'text-node-condition' },
+    { label: 'Mensagens Recebidas', value: totalIncoming, icon: MessageSquare, color: 'text-primary' },
+    { label: 'Mensagens Enviadas', value: totalOutgoing, icon: MessageCircle, color: 'text-node-message' },
+    { label: 'Usuários Únicos', value: uniqueUsers, icon: Users, color: 'text-node-start' },
+    { label: 'Hoje', value: todayMessages, icon: TrendingUp, color: 'text-node-condition' },
   ];
+
+  const maxDaily = Math.max(...dailyData.map(d => d.incoming + d.outgoing), 1);
 
   return (
     <div className="min-h-screen bg-background">
@@ -77,13 +117,41 @@ export default function BotAnalytics() {
           ))}
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-8 text-center">
-          <BarChart3 className="mx-auto mb-4 h-12 w-12 text-muted-foreground/30" />
-          <h2 className="text-lg font-semibold mb-2">Analytics Detalhado</h2>
-          <p className="text-sm text-muted-foreground">
-            Métricas detalhadas como mensagens por hora, funil de conversão e engajamento
-            estarão disponíveis em breve conforme seu bot receber interações.
-          </p>
+        {/* Simple bar chart for last 7 days */}
+        <div className="rounded-xl border border-border bg-card p-6 mb-8">
+          <h2 className="text-sm font-semibold mb-4">Últimos 7 dias</h2>
+          {dailyData.length > 0 ? (
+            <div className="flex items-end gap-2 h-40">
+              {dailyData.map((d) => {
+                const total = d.incoming + d.outgoing;
+                const height = (total / maxDaily) * 100;
+                const inPct = total > 0 ? (d.incoming / total) * 100 : 0;
+                return (
+                  <div key={d.date} className="flex-1 flex flex-col items-center gap-1">
+                    <span className="text-[10px] text-muted-foreground">{total}</span>
+                    <div className="w-full rounded-t overflow-hidden" style={{ height: `${Math.max(height, 4)}%` }}>
+                      <div className="w-full bg-primary" style={{ height: `${100 - inPct}%` }} />
+                      <div className="w-full bg-primary/40" style={{ height: `${inPct}%` }} />
+                    </div>
+                    <span className="text-[9px] text-muted-foreground">
+                      {new Date(d.date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <BarChart3 className="mx-auto mb-4 h-12 w-12 text-muted-foreground/30" />
+              <p className="text-sm text-muted-foreground">
+                Nenhuma interação registrada ainda. Envie /start no seu bot para começar.
+              </p>
+            </div>
+          )}
+          <div className="flex items-center gap-4 mt-3 text-[10px] text-muted-foreground">
+            <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-primary" /> Enviadas</div>
+            <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-primary/40" /> Recebidas</div>
+          </div>
         </div>
       </main>
     </div>
