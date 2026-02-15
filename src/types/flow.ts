@@ -1,6 +1,8 @@
 import { Node, Edge } from '@xyflow/react';
 
-export type NodeType = 'start' | 'message' | 'condition' | 'buttonReply' | 'action' | 'delay' | 'image' | 'userInput' | 'location' | 'httpRequest' | 'video' | 'audio' | 'document' | 'animation' | 'sticker' | 'poll' | 'contact' | 'venue' | 'dice' | 'invoice' | 'editMessage' | 'deleteMessage' | 'mediaGroup' | 'chatgpt' | 'groq' | 'gemini' | 'mercadoPago';
+export type Platform = 'telegram' | 'whatsapp' | 'discord';
+
+export type NodeType = 'start' | 'message' | 'condition' | 'buttonReply' | 'action' | 'delay' | 'image' | 'userInput' | 'location' | 'httpRequest' | 'video' | 'audio' | 'document' | 'animation' | 'sticker' | 'poll' | 'contact' | 'venue' | 'dice' | 'invoice' | 'editMessage' | 'deleteMessage' | 'mediaGroup' | 'chatgpt' | 'groq' | 'gemini';
 
 export interface FlowNodeData {
   label: string;
@@ -66,11 +68,6 @@ export interface FlowNodeData {
   aiApiUrl?: string;
   aiApiKey?: string;
   aiSaveVariable?: string;
-  // Mercado Pago
-  mpDescription?: string;
-  mpAmount?: number;
-  mpAccessToken?: string;
-  mpPixKey?: string;
   [key: string]: unknown;
 }
 

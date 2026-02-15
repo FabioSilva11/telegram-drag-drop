@@ -10,8 +10,10 @@ import { Label } from '@/components/ui/label';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
-import { Bot, Plus, Pencil, Trash2, LogOut, Loader2, Crown, Settings, BarChart3, Check } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Bot, Plus, Pencil, Trash2, LogOut, Loader2, Crown, BarChart3, Check, MessageCircle, Hash } from 'lucide-react';
 import { toast } from 'sonner';
+import type { Platform } from '@/types/flow';
 
 interface BotRecord {
   id: string;
@@ -19,7 +21,14 @@ interface BotRecord {
   telegram_token: string | null;
   is_active: boolean;
   created_at: string;
+  platform: Platform;
 }
+
+const platformMeta: Record<Platform, { label: string; icon: React.ReactNode; color: string }> = {
+  telegram: { label: 'Telegram', icon: <Bot className="h-4 w-4" />, color: 'text-primary' },
+  whatsapp: { label: 'WhatsApp', icon: <MessageCircle className="h-4 w-4" />, color: 'text-node-start' },
+  discord: { label: 'Discord', icon: <Hash className="h-4 w-4" />, color: 'text-node-button' },
+};
 
 export default function Dashboard() {
   const { user, signOut, loading: authLoading } = useAuth();
@@ -31,11 +40,15 @@ export default function Dashboard() {
   const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
   const [newBotName, setNewBotName] = useState('');
   const [newBotToken, setNewBotToken] = useState('');
+  const [newBotPlatform, setNewBotPlatform] = useState<Platform>('telegram');
   const [creating, setCreating] = useState(false);
   const [profile, setProfile] = useState<{ display_name: string | null } | null>(null);
+  const [platformFilter, setPlatformFilter] = useState<Platform | 'all'>('all');
 
   const planLimits = PLANS[plan];
   const canCreateBot = bots.length < planLimits.maxBots;
+
+  const filteredBots = platformFilter === 'all' ? bots : bots.filter(b => b.platform === platformFilter);
 
   useEffect(() => {
     if (!authLoading && !user) navigate('/auth');
@@ -72,9 +85,14 @@ export default function Dashboard() {
       return;
     }
     setCreating(true);
-    const { error } = await supabase.from('bots').insert({ name: newBotName.trim(), telegram_token: newBotToken.trim() || null, user_id: user!.id });
+    const { error } = await supabase.from('bots').insert({
+      name: newBotName.trim(),
+      telegram_token: newBotPlatform === 'telegram' ? (newBotToken.trim() || null) : null,
+      user_id: user!.id,
+      platform: newBotPlatform,
+    } as any);
     if (error) toast.error('Erro ao criar bot');
-    else { toast.success('Bot criado!'); setDialogOpen(false); setNewBotName(''); setNewBotToken(''); fetchBots(); }
+    else { toast.success('Bot criado!'); setDialogOpen(false); setNewBotName(''); setNewBotToken(''); setNewBotPlatform('telegram'); fetchBots(); }
     setCreating(false);
   };
 
@@ -89,14 +107,6 @@ export default function Dashboard() {
       if (error) throw error;
       if (data?.url) window.open(data.url, '_blank');
     } catch { toast.error('Erro ao iniciar checkout'); }
-  };
-
-  const handleManageSubscription = async () => {
-    try {
-      const { data, error } = await supabase.functions.invoke('customer-portal');
-      if (error) throw error;
-      if (data?.url) window.open(data.url, '_blank');
-    } catch { toast.error('Erro ao abrir portal'); }
   };
 
   const maskToken = (token: string | null) => {
@@ -166,9 +176,29 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Bot List */}
+        {/* Platform Filter + Bot List Header */}
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-bold">Meus Bots</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-xl font-bold">Meus Bots</h2>
+            <div className="flex items-center gap-1 rounded-lg border border-border bg-secondary/50 p-0.5">
+              <button
+                onClick={() => setPlatformFilter('all')}
+                className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${platformFilter === 'all' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                Todos
+              </button>
+              {(['telegram', 'whatsapp', 'discord'] as Platform[]).map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setPlatformFilter(p)}
+                  className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${platformFilter === p ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                >
+                  {platformMeta[p].icon}
+                  {platformMeta[p].label}
+                </button>
+              ))}
+            </div>
+          </div>
           <Button
             onClick={() => {
               if (!canCreateBot) { toast.error(`Limite de ${planLimits.maxBots} bot(s) atingido. Faça upgrade!`); return; }
@@ -182,41 +212,51 @@ export default function Dashboard() {
 
         {loading ? (
           <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
-        ) : bots.length === 0 ? (
+        ) : filteredBots.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border py-16 text-center text-muted-foreground">
             <Bot className="mx-auto mb-3 h-10 w-10 opacity-30" />
-            <p>Nenhum bot criado ainda.</p>
+            <p>{bots.length === 0 ? 'Nenhum bot criado ainda.' : 'Nenhum bot nesta plataforma.'}</p>
             <Button variant="outline" className="mt-4" onClick={() => setDialogOpen(true)}>Criar primeiro bot</Button>
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {bots.map((bot) => (
-              <div key={bot.id} className="rounded-xl border border-border bg-card p-5">
-                <div className="mb-3 flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                    <Bot className="h-5 w-5 text-primary" />
+            {filteredBots.map((bot) => {
+              const meta = platformMeta[bot.platform] || platformMeta.telegram;
+              return (
+                <div key={bot.id} className="rounded-xl border border-border bg-card p-5">
+                  <div className="mb-3 flex items-start gap-3">
+                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 ${meta.color}`}>
+                      {meta.icon}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold">{bot.name}</h3>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[11px] font-medium uppercase ${bot.is_active ? 'text-node-start' : 'text-muted-foreground'}`}>
+                          {bot.is_active ? 'ATIVO' : 'INATIVO'}
+                        </span>
+                        <span className={`rounded-full border border-border px-2 py-0.5 text-[10px] font-medium ${meta.color}`}>
+                          {meta.label}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold">{bot.name}</h3>
-                    <span className={`text-[11px] font-medium uppercase ${bot.is_active ? 'text-node-start' : 'text-muted-foreground'}`}>
-                      {bot.is_active ? 'ATIVO' : 'INATIVO'}
-                    </span>
+                  {bot.platform === 'telegram' && (
+                    <p className="mb-4 text-xs text-muted-foreground">Token: {maskToken(bot.telegram_token)}</p>
+                  )}
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" className="flex-1 gap-1.5 border-border text-xs" onClick={() => navigate(`/editor/${bot.platform}/${bot.id}`)}>
+                      <Pencil className="h-3.5 w-3.5" /> Editar Fluxo
+                    </Button>
+                    <Button variant="outline" size="sm" className="gap-1.5 border-border text-xs" onClick={() => navigate(`/analytics/${bot.id}`)}>
+                      <BarChart3 className="h-3.5 w-3.5" /> Analytics
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-destructive/10" onClick={() => deleteBot(bot.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
-                <p className="mb-4 text-xs text-muted-foreground">Token: {maskToken(bot.telegram_token)}</p>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="flex-1 gap-1.5 border-border text-xs" onClick={() => navigate(`/editor/${bot.id}`)}>
-                    <Pencil className="h-3.5 w-3.5" /> Editar Fluxo
-                  </Button>
-                  <Button variant="outline" size="sm" className="gap-1.5 border-border text-xs" onClick={() => navigate(`/analytics/${bot.id}`)}>
-                    <BarChart3 className="h-3.5 w-3.5" /> Analytics
-                  </Button>
-                  <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-destructive/10" onClick={() => deleteBot(bot.id)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </main>
@@ -228,19 +268,53 @@ export default function Dashboard() {
             <DialogTitle>Criar Novo Bot</DialogTitle>
             <DialogDescription>
               {canCreateBot
-                ? `Dê um nome ao bot e opcionalmente insira o token. (${bots.length}/${planLimits.maxBots} bots)`
+                ? `Escolha a plataforma e dê um nome ao bot. (${bots.length}/${planLimits.maxBots} bots)`
                 : `Limite atingido! Faça upgrade para criar mais bots.`}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Plataforma</Label>
+              <div className="grid grid-cols-3 gap-2">
+                {(['telegram', 'whatsapp', 'discord'] as Platform[]).map((p) => {
+                  const meta = platformMeta[p];
+                  return (
+                    <button
+                      key={p}
+                      onClick={() => setNewBotPlatform(p)}
+                      className={`flex flex-col items-center gap-1.5 rounded-lg border p-3 transition-all ${
+                        newBotPlatform === p
+                          ? 'border-primary bg-primary/10 text-primary'
+                          : 'border-border bg-secondary/30 text-muted-foreground hover:border-primary/40'
+                      }`}
+                    >
+                      {meta.icon}
+                      <span className="text-xs font-medium">{meta.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="space-y-2">
               <Label className="text-xs text-muted-foreground">Nome do Bot</Label>
               <Input placeholder="Meu Bot de Vendas" value={newBotName} onChange={(e) => setNewBotName(e.target.value)} className="border-border bg-secondary" />
             </div>
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">Token do Telegram (opcional)</Label>
-              <Input placeholder="123456789:ABCdef..." value={newBotToken} onChange={(e) => setNewBotToken(e.target.value)} className="border-border bg-secondary font-mono text-xs" />
-            </div>
+            {newBotPlatform === 'telegram' && (
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Token do Telegram (opcional)</Label>
+                <Input placeholder="123456789:ABCdef..." value={newBotToken} onChange={(e) => setNewBotToken(e.target.value)} className="border-border bg-secondary font-mono text-xs" />
+              </div>
+            )}
+            {newBotPlatform === 'whatsapp' && (
+              <p className="text-xs text-muted-foreground rounded-lg border border-border bg-secondary/30 p-3">
+                💡 Configure o token da API WhatsApp Cloud (Meta) após criar o bot nas configurações.
+              </p>
+            )}
+            {newBotPlatform === 'discord' && (
+              <p className="text-xs text-muted-foreground rounded-lg border border-border bg-secondary/30 p-3">
+                💡 Configure o token do Discord Bot após criar o bot nas configurações.
+              </p>
+            )}
             <Button onClick={createBot} disabled={creating || !newBotName.trim() || !canCreateBot} className="w-full bg-primary text-primary-foreground">
               {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Criar Bot'}
             </Button>

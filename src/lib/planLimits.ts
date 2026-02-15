@@ -12,7 +12,7 @@ export const ALL_BLOCKS: NodeType[] = [
   'video', 'audio', 'document', 'animation', 'sticker', 'poll',
   'contact', 'venue', 'location', 'dice', 'invoice', 'editMessage',
   'deleteMessage', 'mediaGroup', 'action', 'httpRequest', 'delay',
-  'chatgpt', 'groq', 'gemini', 'mercadoPago',
+  'chatgpt', 'groq', 'gemini',
 ];
 
 export function getAvailableBlocks(plan: PlanKey): NodeType[] {

@@ -1,16 +1,16 @@
-import { DragItem, NodeType } from '@/types/flow';
+import { DragItem, NodeType, Platform } from '@/types/flow';
 import {
   Play, MessageSquare, GitBranch, MousePointerClick, Zap, Timer, Bot, Settings,
   ImageIcon, MessageCircleQuestion, MapPin, Globe, Video, Music, FileText, Film,
   Smile, BarChart3, Phone, Home, Dices, CreditCard, Pencil, Trash2, Images, Lock,
-  Cpu, Sparkles, QrCode,
+  Cpu, Sparkles, MessageCircle, Hash,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useSubscription } from '@/hooks/useSubscription';
 import { isBlockLocked } from '@/lib/planLimits';
 import { toast } from 'sonner';
 
-const nodeItems: DragItem[] = [
+const allNodeItems: DragItem[] = [
   { type: 'start', label: 'Início', icon: 'play', description: 'Ponto de entrada do fluxo' },
   { type: 'message', label: 'Mensagem', icon: 'message', description: 'Enviar mensagem de texto' },
   { type: 'image', label: 'Imagem', icon: 'image', description: 'Enviar foto ou imagem' },
@@ -37,8 +37,38 @@ const nodeItems: DragItem[] = [
   { type: 'chatgpt', label: 'ChatGPT', icon: 'chatgpt', description: 'IA via API OpenAI' },
   { type: 'groq', label: 'Groq', icon: 'groq', description: 'IA ultra-rápida via Groq' },
   { type: 'gemini', label: 'Gemini', icon: 'gemini', description: 'IA Google Gemini' },
-  { type: 'mercadoPago', label: 'Mercado Pago', icon: 'mercadoPago', description: 'Pagamento Pix QR Code' },
 ];
+
+// Blocks available per platform
+const telegramBlocks: NodeType[] = [
+  'start', 'message', 'image', 'buttonReply', 'userInput', 'condition',
+  'video', 'audio', 'document', 'animation', 'sticker', 'poll', 'contact',
+  'venue', 'location', 'dice', 'invoice', 'editMessage', 'deleteMessage',
+  'mediaGroup', 'action', 'httpRequest', 'delay', 'chatgpt', 'groq', 'gemini',
+];
+
+const whatsappBlocks: NodeType[] = [
+  'start', 'message', 'image', 'buttonReply', 'userInput', 'condition',
+  'video', 'audio', 'document', 'location', 'contact',
+  'action', 'httpRequest', 'delay', 'chatgpt', 'groq', 'gemini',
+];
+
+const discordBlocks: NodeType[] = [
+  'start', 'message', 'image', 'buttonReply', 'userInput', 'condition',
+  'action', 'httpRequest', 'delay', 'chatgpt', 'groq', 'gemini',
+];
+
+const platformBlockMap: Record<Platform, NodeType[]> = {
+  telegram: telegramBlocks,
+  whatsapp: whatsappBlocks,
+  discord: discordBlocks,
+};
+
+const platformLabels: Record<Platform, { title: string; subtitle: string }> = {
+  telegram: { title: 'FlowBot Builder', subtitle: 'Construtor de Bots Telegram' },
+  whatsapp: { title: 'FlowBot Builder', subtitle: 'Construtor de Bots WhatsApp' },
+  discord: { title: 'FlowBot Builder', subtitle: 'Construtor de Bots Discord' },
+};
 
 const iconMap: Record<string, React.ReactNode> = {
   play: <Play className="h-4 w-4" />,
@@ -67,7 +97,6 @@ const iconMap: Record<string, React.ReactNode> = {
   chatgpt: <Bot className="h-4 w-4" />,
   groq: <Cpu className="h-4 w-4" />,
   gemini: <Sparkles className="h-4 w-4" />,
-  mercadoPago: <QrCode className="h-4 w-4" />,
 };
 
 const colorMap: Record<NodeType, string> = {
@@ -97,12 +126,21 @@ const colorMap: Record<NodeType, string> = {
   chatgpt: 'border-node-chatgpt/40 hover:border-node-chatgpt/70 text-node-chatgpt bg-node-chatgpt/5 hover:bg-node-chatgpt/10',
   groq: 'border-node-groq/40 hover:border-node-groq/70 text-node-groq bg-node-groq/5 hover:bg-node-groq/10',
   gemini: 'border-node-gemini/40 hover:border-node-gemini/70 text-node-gemini bg-node-gemini/5 hover:bg-node-gemini/10',
-  mercadoPago: 'border-node-mercadoPago/40 hover:border-node-mercadoPago/70 text-node-mercadoPago bg-node-mercadoPago/5 hover:bg-node-mercadoPago/10',
 };
 
-export function NodesSidebar() {
+const platformIconMap: Record<Platform, React.ReactNode> = {
+  telegram: <Bot className="h-5 w-5 text-primary" />,
+  whatsapp: <MessageCircle className="h-5 w-5 text-node-start" />,
+  discord: <Hash className="h-5 w-5 text-node-button" />,
+};
+
+export function NodesSidebar({ platform = 'telegram' }: { platform?: Platform }) {
   const navigate = useNavigate();
   const { plan, loading: subLoading } = useSubscription();
+
+  const availableTypes = platformBlockMap[platform] || telegramBlocks;
+  const nodeItems = allNodeItems.filter(item => availableTypes.includes(item.type));
+  const labels = platformLabels[platform];
 
   const onDragStart = (event: React.DragEvent, nodeType: NodeType) => {
     if (!subLoading && isBlockLocked(nodeType, plan)) {
@@ -119,11 +157,11 @@ export function NodesSidebar() {
     <aside className="flex h-full w-72 flex-col border-r border-border bg-sidebar">
       <div className="flex items-center gap-3 border-b border-border px-5 py-4">
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/15">
-          <Bot className="h-5 w-5 text-primary" />
+          {platformIconMap[platform]}
         </div>
         <div>
-          <h1 className="text-sm font-bold text-foreground">FlowBot Builder</h1>
-          <p className="text-[11px] text-muted-foreground">Construtor de Bots Telegram</p>
+          <h1 className="text-sm font-bold text-foreground">{labels.title}</h1>
+          <p className="text-[11px] text-muted-foreground">{labels.subtitle}</p>
         </div>
       </div>
 
@@ -142,7 +180,7 @@ export function NodesSidebar() {
 
       <div className="flex-1 overflow-y-auto px-4 py-4">
         <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Blocos
+          Blocos — {platformLabels[platform].subtitle.split(' ').pop()}
         </h2>
         <div className="space-y-2">
           {nodeItems.map((item) => {

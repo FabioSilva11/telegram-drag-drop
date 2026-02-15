@@ -1,4 +1,4 @@
-import { X, MessageSquare, GitBranch, MousePointerClick, Zap, Timer, Play, ImageIcon, MessageCircleQuestion, MapPin, Globe, Video, Music, FileText, Film, Smile, BarChart3, Phone, Home, Dices, CreditCard, Pencil, Trash2, Images, Bot, Cpu, Sparkles, QrCode } from 'lucide-react';
+import { X, MessageSquare, GitBranch, MousePointerClick, Zap, Timer, Play, ImageIcon, MessageCircleQuestion, MapPin, Globe, Video, Music, FileText, Film, Smile, BarChart3, Phone, Home, Dices, CreditCard, Pencil, Trash2, Images, Bot, Cpu, Sparkles } from 'lucide-react';
 import { FileUploadField } from './FileUploadField';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,7 +23,7 @@ const iconMap: Record<NodeType, React.ReactNode> = {
   editMessage: <Pencil className="h-4 w-4" />, deleteMessage: <Trash2 className="h-4 w-4" />,
   mediaGroup: <Images className="h-4 w-4" />,
   chatgpt: <Bot className="h-4 w-4" />, groq: <Cpu className="h-4 w-4" />,
-  gemini: <Sparkles className="h-4 w-4" />, mercadoPago: <QrCode className="h-4 w-4" />,
+  gemini: <Sparkles className="h-4 w-4" />,
 };
 
 const colorMap: Record<NodeType, string> = {
@@ -36,7 +36,7 @@ const colorMap: Record<NodeType, string> = {
   dice: 'text-node-dice', invoice: 'text-node-invoice', editMessage: 'text-node-editMessage',
   deleteMessage: 'text-node-deleteMessage', mediaGroup: 'text-node-mediaGroup',
   chatgpt: 'text-node-chatgpt', groq: 'text-node-groq',
-  gemini: 'text-node-gemini', mercadoPago: 'text-node-mercadoPago',
+  gemini: 'text-node-gemini',
 };
 
 export function NodeEditorPanel() {
@@ -556,28 +556,6 @@ export function NodeEditorPanel() {
           </div>
         )}
 
-        {/* Mercado Pago */}
-        {nodeType === 'mercadoPago' && (
-          <div className="space-y-3">
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">Access Token</Label>
-              <Input type="password" value={String(selectedNode.data.mpAccessToken || '')} onChange={(e) => updateNodeData(selectedNode.id, { mpAccessToken: e.target.value })} className="h-9 font-mono text-sm" placeholder="APP_USR-..." />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">Descrição do pagamento</Label>
-              <Input value={String(selectedNode.data.mpDescription || '')} onChange={(e) => updateNodeData(selectedNode.id, { mpDescription: e.target.value })} className="h-9" placeholder="Pagamento do produto X" />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">Valor (centavos)</Label>
-              <Input type="number" value={Number(selectedNode.data.mpAmount || 0)} onChange={(e) => updateNodeData(selectedNode.id, { mpAmount: parseInt(e.target.value) || 0 })} className="h-9" min={0} placeholder="1000 = R$10,00" />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">Chave Pix (e-mail, CPF, etc.)</Label>
-              <Input value={String(selectedNode.data.mpPixKey || '')} onChange={(e) => updateNodeData(selectedNode.id, { mpPixKey: e.target.value })} className="h-9" placeholder="email@exemplo.com" />
-            </div>
-            <p className="text-[10px] text-muted-foreground">Gera QR Code Pix e código copia-e-cola automaticamente via API do Mercado Pago.</p>
-          </div>
-        )}
       </div>
     </div>
   );

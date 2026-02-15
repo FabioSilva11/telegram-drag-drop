@@ -12,7 +12,9 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 
-export function FlowToolbar({ botId }: { botId?: string } = {}) {
+import type { Platform } from '@/types/flow';
+
+export function FlowToolbar({ botId, platform = 'telegram' }: { botId?: string; platform?: Platform } = {}) {
   const { nodes, edges, setNodes, setEdges, undo, redo, clearCanvas, canUndo, canRedo } = useFlow();
   const { plan } = useSubscription();
   const [isPublishing, setIsPublishing] = useState(false);

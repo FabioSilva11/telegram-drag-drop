@@ -28,6 +28,9 @@ const App = () => (
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/editor/telegram/:botId" element={<Editor />} />
+            <Route path="/editor/whatsapp/:botId" element={<Editor />} />
+            <Route path="/editor/discord/:botId" element={<Editor />} />
             <Route path="/editor/:botId" element={<Editor />} />
             <Route path="/analytics/:botId" element={<BotAnalytics />} />
             <Route path="*" element={<NotFound />} />

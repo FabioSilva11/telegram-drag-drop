@@ -37,7 +37,7 @@ export default {
           dice: "hsl(var(--node-dice))", invoice: "hsl(var(--node-invoice))", editMessage: "hsl(var(--node-editMessage))",
           deleteMessage: "hsl(var(--node-deleteMessage))", mediaGroup: "hsl(var(--node-mediaGroup))",
           chatgpt: "hsl(var(--node-chatgpt))", groq: "hsl(var(--node-groq))",
-          gemini: "hsl(var(--node-gemini))", mercadoPago: "hsl(var(--node-mercadoPago))",
+          gemini: "hsl(var(--node-gemini))",
         },
       },
       borderRadius: { lg: "var(--radius)", md: "calc(var(--radius) - 2px)", sm: "calc(var(--radius) - 4px)" },

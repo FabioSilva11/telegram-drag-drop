@@ -43,7 +43,6 @@ const defaultNodeData: Record<NodeType, Partial<FlowNodeData>> = {
   chatgpt: { label: 'ChatGPT', aiPrompt: '', aiModel: 'gpt-4', aiApiUrl: 'https://api.openai.com/v1/chat/completions', aiApiKey: '', aiSaveVariable: 'ai_response' },
   groq: { label: 'Groq', aiPrompt: '', aiModel: 'llama3-70b-8192', aiApiUrl: 'https://api.groq.com/openai/v1/chat/completions', aiApiKey: '', aiSaveVariable: 'ai_response' },
   gemini: { label: 'Gemini', aiPrompt: '', aiModel: 'gemini-pro', aiApiUrl: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', aiApiKey: '', aiSaveVariable: 'ai_response' },
-  mercadoPago: { label: 'Mercado Pago', mpDescription: '', mpAmount: 0, mpAccessToken: '', mpPixKey: '' },
 };
 
 interface HistoryState {
