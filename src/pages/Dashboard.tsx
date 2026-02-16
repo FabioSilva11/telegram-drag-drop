@@ -7,6 +7,8 @@ import { PLANS } from '@/lib/plans';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
@@ -22,12 +24,20 @@ interface BotRecord {
   is_active: boolean;
   created_at: string;
   platform: Platform;
+  is_group_bot: boolean;
+  group_chat_id: string | null;
+  whatsapp_phone_number_id: string | null;
+  whatsapp_access_token: string | null;
+  whatsapp_business_account_id: string | null;
+  discord_bot_token: string | null;
+  discord_application_id: string | null;
+  discord_guild_id: string | null;
 }
 
-const platformMeta: Record<Platform, { label: string; icon: React.ReactNode; color: string }> = {
+const platformMeta: Record<Platform, { label: string; icon: React.ReactNode; color: string; beta?: boolean }> = {
   telegram: { label: 'Telegram', icon: <Bot className="h-4 w-4" />, color: 'text-primary' },
-  whatsapp: { label: 'WhatsApp', icon: <MessageCircle className="h-4 w-4" />, color: 'text-node-start' },
-  discord: { label: 'Discord', icon: <Hash className="h-4 w-4" />, color: 'text-node-button' },
+  whatsapp: { label: 'WhatsApp', icon: <MessageCircle className="h-4 w-4" />, color: 'text-node-start', beta: true },
+  discord: { label: 'Discord', icon: <Hash className="h-4 w-4" />, color: 'text-node-button', beta: true },
 };
 
 export default function Dashboard() {
@@ -44,6 +54,20 @@ export default function Dashboard() {
   const [creating, setCreating] = useState(false);
   const [profile, setProfile] = useState<{ display_name: string | null } | null>(null);
   const [platformFilter, setPlatformFilter] = useState<Platform | 'all'>('all');
+
+  // Telegram group bot fields
+  const [isGroupBot, setIsGroupBot] = useState(false);
+  const [groupChatId, setGroupChatId] = useState('');
+
+  // WhatsApp fields
+  const [waPhoneNumberId, setWaPhoneNumberId] = useState('');
+  const [waAccessToken, setWaAccessToken] = useState('');
+  const [waBusinessAccountId, setWaBusinessAccountId] = useState('');
+
+  // Discord fields
+  const [discordBotToken, setDiscordBotToken] = useState('');
+  const [discordAppId, setDiscordAppId] = useState('');
+  const [discordGuildId, setDiscordGuildId] = useState('');
 
   const planLimits = PLANS[plan];
   const canCreateBot = bots.length < planLimits.maxBots;
@@ -78,6 +102,13 @@ export default function Dashboard() {
     setLoading(false);
   };
 
+  const resetForm = () => {
+    setNewBotName(''); setNewBotToken(''); setNewBotPlatform('telegram');
+    setIsGroupBot(false); setGroupChatId('');
+    setWaPhoneNumberId(''); setWaAccessToken(''); setWaBusinessAccountId('');
+    setDiscordBotToken(''); setDiscordAppId(''); setDiscordGuildId('');
+  };
+
   const createBot = async () => {
     if (!newBotName.trim()) return;
     if (!canCreateBot) {
@@ -85,14 +116,31 @@ export default function Dashboard() {
       return;
     }
     setCreating(true);
-    const { error } = await supabase.from('bots').insert({
+
+    const insertData: any = {
       name: newBotName.trim(),
-      telegram_token: newBotPlatform === 'telegram' ? (newBotToken.trim() || null) : null,
       user_id: user!.id,
       platform: newBotPlatform,
-    } as any);
+      is_group_bot: false,
+    };
+
+    if (newBotPlatform === 'telegram') {
+      insertData.telegram_token = newBotToken.trim() || null;
+      insertData.is_group_bot = isGroupBot;
+      insertData.group_chat_id = isGroupBot ? (groupChatId.trim() || null) : null;
+    } else if (newBotPlatform === 'whatsapp') {
+      insertData.whatsapp_phone_number_id = waPhoneNumberId.trim() || null;
+      insertData.whatsapp_access_token = waAccessToken.trim() || null;
+      insertData.whatsapp_business_account_id = waBusinessAccountId.trim() || null;
+    } else if (newBotPlatform === 'discord') {
+      insertData.discord_bot_token = discordBotToken.trim() || null;
+      insertData.discord_application_id = discordAppId.trim() || null;
+      insertData.discord_guild_id = discordGuildId.trim() || null;
+    }
+
+    const { error } = await supabase.from('bots').insert(insertData);
     if (error) toast.error('Erro ao criar bot');
-    else { toast.success('Bot criado!'); setDialogOpen(false); setNewBotName(''); setNewBotToken(''); setNewBotPlatform('telegram'); fetchBots(); }
+    else { toast.success('Bot criado!'); setDialogOpen(false); resetForm(); fetchBots(); }
     setCreating(false);
   };
 
@@ -150,11 +198,10 @@ export default function Dashboard() {
 
       <main className="mx-auto max-w-6xl px-6 py-8">
         {/* Stats */}
-        <div className="mb-8 grid gap-4 sm:grid-cols-3">
+        <div className="mb-8 grid gap-4 sm:grid-cols-2">
           {[
             { label: 'Total de Bots', value: `${bots.length} / ${planLimits.maxBots}` },
             { label: 'Plano Atual', value: planLimits.name },
-            { label: 'Msgs/Dia', value: planLimits.maxMessagesPerDay === Infinity ? 'Ilimitadas' : planLimits.maxMessagesPerDay },
           ].map((s) => (
             <div key={s.label} className="rounded-xl border border-border bg-card p-5">
               <p className="text-xs text-muted-foreground">{s.label}</p>
@@ -195,6 +242,9 @@ export default function Dashboard() {
                 >
                   {platformMeta[p].icon}
                   {platformMeta[p].label}
+                  {platformMeta[p].beta && (
+                    <Badge variant="outline" className="ml-1 text-[9px] px-1 py-0 border-yellow-500/50 text-yellow-500">BETA</Badge>
+                  )}
                 </button>
               ))}
             </div>
@@ -237,11 +287,23 @@ export default function Dashboard() {
                         <span className={`rounded-full border border-border px-2 py-0.5 text-[10px] font-medium ${meta.color}`}>
                           {meta.label}
                         </span>
+                        {meta.beta && (
+                          <Badge variant="outline" className="text-[9px] px-1 py-0 border-yellow-500/50 text-yellow-500">BETA</Badge>
+                        )}
+                        {bot.is_group_bot && (
+                          <span className="rounded-full border border-border px-2 py-0.5 text-[10px] font-medium text-muted-foreground">Grupo</span>
+                        )}
                       </div>
                     </div>
                   </div>
                   {bot.platform === 'telegram' && (
                     <p className="mb-4 text-xs text-muted-foreground">Token: {maskToken(bot.telegram_token)}</p>
+                  )}
+                  {bot.platform === 'whatsapp' && (
+                    <p className="mb-4 text-xs text-muted-foreground">Phone ID: {maskToken(bot.whatsapp_phone_number_id)}</p>
+                  )}
+                  {bot.platform === 'discord' && (
+                    <p className="mb-4 text-xs text-muted-foreground">App ID: {maskToken(bot.discord_application_id)}</p>
                   )}
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" className="flex-1 gap-1.5 border-border text-xs" onClick={() => navigate(`/editor/${bot.platform}/${bot.id}`)}>
@@ -262,13 +324,13 @@ export default function Dashboard() {
       </main>
 
       {/* Create Bot Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="border-border bg-card sm:max-w-md">
+      <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
+        <DialogContent className="border-border bg-card sm:max-w-md max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Criar Novo Bot</DialogTitle>
             <DialogDescription>
               {canCreateBot
-                ? `Escolha a plataforma e dê um nome ao bot. (${bots.length}/${planLimits.maxBots} bots)`
+                ? `Escolha a plataforma e configure o bot. (${bots.length}/${planLimits.maxBots} bots)`
                 : `Limite atingido! Faça upgrade para criar mais bots.`}
             </DialogDescription>
           </DialogHeader>
@@ -290,6 +352,9 @@ export default function Dashboard() {
                     >
                       {meta.icon}
                       <span className="text-xs font-medium">{meta.label}</span>
+                      {meta.beta && (
+                        <Badge variant="outline" className="text-[8px] px-1 py-0 border-yellow-500/50 text-yellow-500">BETA</Badge>
+                      )}
                     </button>
                   );
                 })}
@@ -299,22 +364,86 @@ export default function Dashboard() {
               <Label className="text-xs text-muted-foreground">Nome do Bot</Label>
               <Input placeholder="Meu Bot de Vendas" value={newBotName} onChange={(e) => setNewBotName(e.target.value)} className="border-border bg-secondary" />
             </div>
+
+            {/* Telegram fields */}
             {newBotPlatform === 'telegram' && (
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">Token do Telegram (opcional)</Label>
-                <Input placeholder="123456789:ABCdef..." value={newBotToken} onChange={(e) => setNewBotToken(e.target.value)} className="border-border bg-secondary font-mono text-xs" />
-              </div>
+              <>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Token do Bot</Label>
+                  <Input placeholder="123456789:ABCdef..." value={newBotToken} onChange={(e) => setNewBotToken(e.target.value)} className="border-border bg-secondary font-mono text-xs" />
+                  <p className="text-[10px] text-muted-foreground">Obtenha no @BotFather do Telegram.</p>
+                </div>
+                <div className="flex items-center justify-between rounded-lg border border-border bg-secondary/30 p-3">
+                  <div>
+                    <Label className="text-xs font-medium">Bot em Grupo?</Label>
+                    <p className="text-[10px] text-muted-foreground">Ative se o bot vai operar dentro de um grupo.</p>
+                  </div>
+                  <Switch checked={isGroupBot} onCheckedChange={setIsGroupBot} />
+                </div>
+                {isGroupBot && (
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">ID do Grupo (Chat ID)</Label>
+                    <Input placeholder="-1001234567890" value={groupChatId} onChange={(e) => setGroupChatId(e.target.value)} className="border-border bg-secondary font-mono text-xs" />
+                    <p className="text-[10px] text-muted-foreground">
+                      Adicione o bot ao grupo, envie uma mensagem, e acesse:<br />
+                      <code className="text-[9px] bg-muted px-1 py-0.5 rounded">https://api.telegram.org/bot{'<TOKEN>'}/getUpdates</code><br />
+                      O chat.id negativo é o ID do grupo.
+                    </p>
+                  </div>
+                )}
+              </>
             )}
+
+            {/* WhatsApp fields */}
             {newBotPlatform === 'whatsapp' && (
-              <p className="text-xs text-muted-foreground rounded-lg border border-border bg-secondary/30 p-3">
-                💡 Configure o token da API WhatsApp Cloud (Meta) após criar o bot nas configurações.
-              </p>
+              <>
+                <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/5 p-3">
+                  <p className="text-xs font-medium text-yellow-500 mb-1">⚠️ Beta</p>
+                  <p className="text-[10px] text-muted-foreground">Esta integração está em fase de testes.</p>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Phone Number ID</Label>
+                  <Input placeholder="1234567890" value={waPhoneNumberId} onChange={(e) => setWaPhoneNumberId(e.target.value)} className="border-border bg-secondary font-mono text-xs" />
+                  <p className="text-[10px] text-muted-foreground">Meta Business → WhatsApp → API Setup → Phone Number ID</p>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Access Token (Permanente)</Label>
+                  <Input placeholder="EAAx..." value={waAccessToken} onChange={(e) => setWaAccessToken(e.target.value)} className="border-border bg-secondary font-mono text-xs" type="password" />
+                  <p className="text-[10px] text-muted-foreground">Token de acesso permanente do sistema da Meta Business.</p>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">WhatsApp Business Account ID</Label>
+                  <Input placeholder="1234567890" value={waBusinessAccountId} onChange={(e) => setWaBusinessAccountId(e.target.value)} className="border-border bg-secondary font-mono text-xs" />
+                  <p className="text-[10px] text-muted-foreground">Meta Business → WhatsApp → API Setup → WABA ID</p>
+                </div>
+              </>
             )}
+
+            {/* Discord fields */}
             {newBotPlatform === 'discord' && (
-              <p className="text-xs text-muted-foreground rounded-lg border border-border bg-secondary/30 p-3">
-                💡 Configure o token do Discord Bot após criar o bot nas configurações.
-              </p>
+              <>
+                <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/5 p-3">
+                  <p className="text-xs font-medium text-yellow-500 mb-1">⚠️ Beta</p>
+                  <p className="text-[10px] text-muted-foreground">Esta integração está em fase de testes.</p>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Bot Token</Label>
+                  <Input placeholder="MTIx..." value={discordBotToken} onChange={(e) => setDiscordBotToken(e.target.value)} className="border-border bg-secondary font-mono text-xs" type="password" />
+                  <p className="text-[10px] text-muted-foreground">Discord Developer Portal → Bot → Token</p>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Application ID (Client ID)</Label>
+                  <Input placeholder="123456789012345678" value={discordAppId} onChange={(e) => setDiscordAppId(e.target.value)} className="border-border bg-secondary font-mono text-xs" />
+                  <p className="text-[10px] text-muted-foreground">Discord Developer Portal → General Information → Application ID</p>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Guild ID (Server ID)</Label>
+                  <Input placeholder="123456789012345678" value={discordGuildId} onChange={(e) => setDiscordGuildId(e.target.value)} className="border-border bg-secondary font-mono text-xs" />
+                  <p className="text-[10px] text-muted-foreground">Ative o Modo Desenvolvedor → Clique direito no servidor → Copiar ID</p>
+                </div>
+              </>
             )}
+
             <Button onClick={createBot} disabled={creating || !newBotName.trim() || !canCreateBot} className="w-full bg-primary text-primary-foreground">
               {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Criar Bot'}
             </Button>

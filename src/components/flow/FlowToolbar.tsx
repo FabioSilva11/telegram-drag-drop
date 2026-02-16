@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Save, Undo2, Redo2, Trash2, Play, Square, Loader2, Download, Upload } from 'lucide-react';
+import { Save, Undo2, Redo2, Trash2, Play, Square, Loader2, Download, Upload, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useFlow } from '@/contexts/FlowContext';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -14,7 +14,7 @@ import {
 
 import type { Platform } from '@/types/flow';
 
-export function FlowToolbar({ botId, platform = 'telegram' }: { botId?: string; platform?: Platform } = {}) {
+export function FlowToolbar({ botId, platform = 'telegram', saving = false }: { botId?: string; platform?: Platform; saving?: boolean } = {}) {
   const { nodes, edges, setNodes, setEdges, undo, redo, clearCanvas, canUndo, canRedo } = useFlow();
   const { plan } = useSubscription();
   const [isPublishing, setIsPublishing] = useState(false);
@@ -59,7 +59,8 @@ export function FlowToolbar({ botId, platform = 'telegram' }: { botId?: string; 
     if (nodes.length <= 1) { toast.error('Adicione pelo menos um bloco além do início.'); return; }
     setIsPublishing(true);
     try {
-      const { data, error } = await supabase.functions.invoke('set-telegram-webhook', { body: { nodes, edges, botId, action: 'activate' } });
+      const webhookFn = platform === 'whatsapp' ? 'whatsapp-webhook' : platform === 'discord' ? 'discord-webhook' : 'set-telegram-webhook';
+      const { data, error } = await supabase.functions.invoke(webhookFn, { body: { nodes, edges, botId, action: 'activate' } });
       if (error) throw error;
       if (data?.success) {
         setIsBotActive(true);
@@ -71,7 +72,8 @@ export function FlowToolbar({ botId, platform = 'telegram' }: { botId?: string; 
   const deactivateBot = async () => {
     setIsPublishing(true);
     try {
-      const { data, error } = await supabase.functions.invoke('set-telegram-webhook', { body: { action: 'deactivate', botId } });
+      const webhookFn = platform === 'whatsapp' ? 'whatsapp-webhook' : platform === 'discord' ? 'discord-webhook' : 'set-telegram-webhook';
+      const { data, error } = await supabase.functions.invoke(webhookFn, { body: { action: 'deactivate', botId } });
       if (error) throw error;
       setIsBotActive(false);
       toast.success('Bot desativado.');
@@ -130,6 +132,16 @@ export function FlowToolbar({ botId, platform = 'telegram' }: { botId?: string; 
       </div>
 
       <div className="flex items-center gap-4">
+        {saving && (
+          <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <Loader2 className="h-3 w-3 animate-spin" /> Salvando...
+          </span>
+        )}
+        {!saving && (
+          <span className="flex items-center gap-1.5 text-[11px] text-node-start">
+            <CheckCircle2 className="h-3 w-3" /> Salvo
+          </span>
+        )}
         {isBotActive && (
           <span className="flex items-center gap-1.5 text-[11px] text-node-start">
             <span className="h-2 w-2 rounded-full bg-node-start animate-pulse" /> Bot ativo

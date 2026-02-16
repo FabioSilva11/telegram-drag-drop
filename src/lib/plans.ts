@@ -5,8 +5,7 @@ export const PLANS = {
     priceId: null,
     productId: null,
     maxBots: 1,
-    maxMessagesPerDay: 50,
-    features: ['Editor visual', '50 mensagens/dia', '1 bot', 'Suporte comunidade'],
+    features: ['Editor visual', '1 bot', 'Suporte comunidade'],
   },
   pro: {
     name: 'Pro',
@@ -14,7 +13,6 @@ export const PLANS = {
     priceId: 'price_1SzVwxKvkCUCDLj5ZIYXL6U6',
     productId: 'prod_TxQoP3fOGx10AH',
     maxBots: 5,
-    maxMessagesPerDay: Infinity,
     features: ['Tudo do Starter', 'Mensagens ilimitadas', '5 bots', 'APIs externas', 'Suporte prioritário'],
   },
   enterprise: {
@@ -23,7 +21,6 @@ export const PLANS = {
     priceId: 'price_1SzVxAKvkCUCDLj5GM467AeX',
     productId: 'prod_TxQoQZOZqdtyug',
     maxBots: 11,
-    maxMessagesPerDay: Infinity,
     features: ['Tudo do Pro', 'Mensagens ilimitadas', '11 bots', 'White-label', 'Webhooks avançados', 'Suporte dedicado'],
   },
 } as const;

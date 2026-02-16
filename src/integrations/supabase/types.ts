@@ -135,33 +135,57 @@ export type Database = {
       bots: {
         Row: {
           created_at: string
+          discord_application_id: string | null
+          discord_bot_token: string | null
+          discord_guild_id: string | null
+          group_chat_id: string | null
           id: string
           is_active: boolean
+          is_group_bot: boolean
           name: string
           platform: string
           telegram_token: string | null
           updated_at: string
           user_id: string
+          whatsapp_access_token: string | null
+          whatsapp_business_account_id: string | null
+          whatsapp_phone_number_id: string | null
         }
         Insert: {
           created_at?: string
+          discord_application_id?: string | null
+          discord_bot_token?: string | null
+          discord_guild_id?: string | null
+          group_chat_id?: string | null
           id?: string
           is_active?: boolean
+          is_group_bot?: boolean
           name?: string
           platform?: string
           telegram_token?: string | null
           updated_at?: string
           user_id: string
+          whatsapp_access_token?: string | null
+          whatsapp_business_account_id?: string | null
+          whatsapp_phone_number_id?: string | null
         }
         Update: {
           created_at?: string
+          discord_application_id?: string | null
+          discord_bot_token?: string | null
+          discord_guild_id?: string | null
+          group_chat_id?: string | null
           id?: string
           is_active?: boolean
+          is_group_bot?: boolean
           name?: string
           platform?: string
           telegram_token?: string | null
           updated_at?: string
           user_id?: string
+          whatsapp_access_token?: string | null
+          whatsapp_business_account_id?: string | null
+          whatsapp_phone_number_id?: string | null
         }
         Relationships: []
       }
