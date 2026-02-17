@@ -183,12 +183,12 @@ export default function Dashboard() {
             </div>
             <span className="text-lg font-bold">FlowBot</span>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <div className="flex items-center gap-1.5">
               <Crown className="h-4 w-4 text-primary" />
               <span className="text-xs font-medium text-primary">{planLimits.name}</span>
             </div>
-            <span className="text-sm text-muted-foreground">{profile?.display_name || user.email}</span>
+            <span className="hidden sm:inline text-sm text-muted-foreground truncate max-w-[120px]">{profile?.display_name || user.email}</span>
             <Button variant="ghost" size="icon" onClick={() => { signOut(); navigate('/'); }}>
               <LogOut className="h-4 w-4" />
             </Button>
@@ -196,7 +196,7 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-6 py-8">
+      <main className="mx-auto max-w-6xl px-4 sm:px-6 py-6 sm:py-8">
         {/* Stats */}
         <div className="mb-8 grid gap-4 sm:grid-cols-2">
           {[
@@ -215,7 +215,7 @@ export default function Dashboard() {
           <div className="mb-8 rounded-xl border border-primary/30 bg-primary/5 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <p className="font-semibold text-primary">🚀 Faça upgrade para desbloquear mais recursos!</p>
-              <p className="text-sm text-muted-foreground">Mais bots, mensagens ilimitadas e blocos avançados.</p>
+              <p className="text-sm text-muted-foreground">Mais bots, todos os blocos e suporte multiplataforma.</p>
             </div>
             <Button onClick={() => setUpgradeDialogOpen(true)} className="bg-primary text-primary-foreground whitespace-nowrap">
               Ver Planos
@@ -224,13 +224,13 @@ export default function Dashboard() {
         )}
 
         {/* Platform Filter + Bot List Header */}
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
             <h2 className="text-xl font-bold">Meus Bots</h2>
-            <div className="flex items-center gap-1 rounded-lg border border-border bg-secondary/50 p-0.5">
+            <div className="flex items-center gap-1 overflow-x-auto rounded-lg border border-border bg-secondary/50 p-0.5">
               <button
                 onClick={() => setPlatformFilter('all')}
-                className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${platformFilter === 'all' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                className={`shrink-0 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${platformFilter === 'all' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
               >
                 Todos
               </button>
@@ -238,10 +238,10 @@ export default function Dashboard() {
                 <button
                   key={p}
                   onClick={() => setPlatformFilter(p)}
-                  className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${platformFilter === p ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                  className={`flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${platformFilter === p ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
                 >
                   {platformMeta[p].icon}
-                  {platformMeta[p].label}
+                  <span className="hidden xs:inline">{platformMeta[p].label}</span>
                   {platformMeta[p].beta && (
                     <Badge variant="outline" className="ml-1 text-[9px] px-1 py-0 border-yellow-500/50 text-yellow-500">BETA</Badge>
                   )}
@@ -254,7 +254,7 @@ export default function Dashboard() {
               if (!canCreateBot) { toast.error(`Limite de ${planLimits.maxBots} bot(s) atingido. Faça upgrade!`); return; }
               setDialogOpen(true);
             }}
-            className="gap-2 bg-primary text-primary-foreground"
+            className="gap-2 bg-primary text-primary-foreground w-full sm:w-auto"
           >
             <Plus className="h-4 w-4" /> Novo Bot
           </Button>
@@ -305,12 +305,12 @@ export default function Dashboard() {
                   {bot.platform === 'discord' && (
                     <p className="mb-4 text-xs text-muted-foreground">App ID: {maskToken(bot.discord_application_id)}</p>
                   )}
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="flex-1 gap-1.5 border-border text-xs" onClick={() => navigate(`/editor/${bot.platform}/${bot.id}`)}>
-                      <Pencil className="h-3.5 w-3.5" /> Editar Fluxo
+                  <div className="flex flex-wrap gap-2">
+                    <Button variant="outline" size="sm" className="flex-1 min-w-[100px] gap-1.5 border-border text-xs" onClick={() => navigate(`/editor/${bot.platform}/${bot.id}`)}>
+                      <Pencil className="h-3.5 w-3.5" /> Editar
                     </Button>
                     <Button variant="outline" size="sm" className="gap-1.5 border-border text-xs" onClick={() => navigate(`/analytics/${bot.id}`)}>
-                      <BarChart3 className="h-3.5 w-3.5" /> Analytics
+                      <BarChart3 className="h-3.5 w-3.5" />
                     </Button>
                     <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-destructive/10" onClick={() => deleteBot(bot.id)}>
                       <Trash2 className="h-4 w-4" />

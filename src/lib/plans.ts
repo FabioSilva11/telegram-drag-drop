@@ -5,7 +5,7 @@ export const PLANS = {
     priceId: null,
     productId: null,
     maxBots: 1,
-    features: ['Editor visual', '1 bot', 'Suporte comunidade'],
+    features: ['Editor visual', '1 bot', 'Blocos básicos', 'Suporte comunidade'],
   },
   pro: {
     name: 'Pro',
@@ -13,7 +13,7 @@ export const PLANS = {
     priceId: 'price_1SzVwxKvkCUCDLj5ZIYXL6U6',
     productId: 'prod_TxQoP3fOGx10AH',
     maxBots: 5,
-    features: ['Tudo do Starter', 'Mensagens ilimitadas', '5 bots', 'APIs externas', 'Suporte prioritário'],
+    features: ['Tudo do Starter', '5 bots', 'Todos os blocos', 'Telegram + WhatsApp + Discord', 'APIs externas & IA', 'Suporte prioritário'],
   },
   enterprise: {
     name: 'Enterprise',
@@ -21,7 +21,7 @@ export const PLANS = {
     priceId: 'price_1SzVxAKvkCUCDLj5GM467AeX',
     productId: 'prod_TxQoQZOZqdtyug',
     maxBots: 11,
-    features: ['Tudo do Pro', 'Mensagens ilimitadas', '11 bots', 'White-label', 'Webhooks avançados', 'Suporte dedicado'],
+    features: ['Tudo do Pro', '11 bots', 'White-label', 'Webhooks avançados', 'Telegram + WhatsApp + Discord', 'Suporte dedicado'],
   },
 } as const;
 

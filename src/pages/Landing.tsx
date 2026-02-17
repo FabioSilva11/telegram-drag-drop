@@ -27,9 +27,9 @@ const features = [
 ];
 
 const plans = [
-  { name: 'Starter', price: 'Grátis', sub: '1 bot · 50 msgs/dia', features: ['Editor visual', '50 mensagens/dia', '1 bot', 'Suporte comunidade'], highlight: false },
-  { name: 'Pro', price: 'R$ 49/mês', sub: '5 bots · msgs ilimitadas', features: ['Tudo do Starter', 'Mensagens ilimitadas', '5 bots', 'APIs externas', 'Suporte prioritário'], highlight: true, badge: '🔥 Mais Popular' },
-  { name: 'Enterprise', price: 'R$ 149/mês', sub: '11 bots · msgs ilimitadas', features: ['Tudo do Pro', '11 bots', 'White-label', 'Webhooks avançados', 'Suporte dedicado'], highlight: false },
+  { name: 'Starter', price: 'Grátis', sub: '1 bot · Telegram', features: ['Editor visual drag & drop', '1 bot', 'Blocos básicos', 'Suporte comunidade'], highlight: false },
+  { name: 'Pro', price: 'R$ 49/mês', sub: '5 bots · Multiplataforma', features: ['Tudo do Starter', '5 bots', 'Todos os blocos', 'Telegram + WhatsApp + Discord', 'APIs externas & IA', 'Suporte prioritário'], highlight: true, badge: '🔥 Mais Popular' },
+  { name: 'Enterprise', price: 'R$ 149/mês', sub: '11 bots · Multiplataforma', features: ['Tudo do Pro', '11 bots', 'White-label', 'Webhooks avançados', 'Telegram + WhatsApp + Discord', 'Suporte dedicado'], highlight: false },
 ];
 
 const testimonials = [
@@ -41,7 +41,7 @@ const testimonials = [
 const howItWorks = [
   { step: '01', title: 'Crie sua conta', desc: 'Cadastre-se gratuitamente em menos de 30 segundos.' },
   { step: '02', title: 'Monte seu fluxo', desc: 'Arraste e solte blocos no editor visual para criar a lógica do bot.' },
-  { step: '03', title: 'Conecte ao Telegram', desc: 'Insira seu token do BotFather e publique em um clique.' },
+  { step: '03', title: 'Conecte à plataforma', desc: 'Telegram, WhatsApp ou Discord — configure em poucos cliques.' },
   { step: '04', title: 'Lucre no automático', desc: 'Seu bot atende, vende e engaja 24/7 sem parar.' },
 ];
 
@@ -53,10 +53,10 @@ const metrics = [
 ];
 
 const faqs = [
-  { q: 'Por que Telegram e não WhatsApp?', a: 'O Telegram permite bots poderosos nativamente, canais ilimitados e tem engajamento muito maior. Sem precisar de APIs pagas ou aprovação.' },
+  { q: 'Quais plataformas são suportadas?', a: 'Telegram (100% funcional), WhatsApp Business (Beta) via Cloud API da Meta, e Discord (Beta) com slash commands e embeds. Novas plataformas são adicionadas frequentemente.' },
   { q: 'Preciso programar?', a: 'Não! Arraste e solte blocos no editor visual. Sem uma linha de código.' },
   { q: 'Quanto tempo pra ver resultado?', a: 'Muitos usuários veem leads chegando na primeira semana após configurar seus bots.' },
-  { q: 'E se eu não usar agora?', a: 'Concorrentes capturam clientes 24h enquanto você responde manualmente. Cada dia sem automação é dinheiro perdido.' },
+  { q: 'O bot funciona quando eu não estou online?', a: 'Sim! Seus bots rodam 24/7 na nuvem, respondendo automaticamente mesmo quando você está offline.' },
   { q: 'Posso cancelar a qualquer momento?', a: 'Sim! Cancele quando quiser sem burocracia. Sem fidelidade.' },
 ];
 
@@ -91,23 +91,22 @@ export default function Landing() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[600px] w-[600px] rounded-full bg-[#00BFFF]/5 blur-[120px]" />
         <div className="relative mx-auto max-w-4xl text-center">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#00BFFF]/30 bg-[#00BFFF]/10 px-4 py-1.5 text-sm text-[#00BFFF]">
-            <Rocket className="h-4 w-4" /> Plataforma No-Code para Bots Telegram
+            <Rocket className="h-4 w-4" /> Plataforma No-Code para Bots — Telegram · WhatsApp · Discord
           </div>
 
           <h1 className="mb-6 text-4xl font-extrabold leading-tight text-white sm:text-5xl md:text-6xl lg:text-7xl">
-            Domine o Telegram Antes que Seus Concorrentes{' '}
-            <span className="text-[#00BFFF]">Façam Isso</span>
+            Automatize Seu Negócio em{' '}
+            <span className="text-[#00BFFF]">Qualquer Plataforma</span>
           </h1>
 
           <p className="mx-auto mb-6 max-w-2xl text-base sm:text-lg text-white/60 leading-relaxed">
-            Telegram já tem mais de <strong className="text-white">22 milhões de usuários ativos</strong> só no Brasil
-            e virou a principal plataforma de vendas e atendimento digital.
-            Bots automatizam tudo 24h — se você não começar <strong className="text-[#00BFFF]">AGORA</strong>,
-            perde leads e faturamento todos os dias.
+            Crie bots para <strong className="text-white">Telegram, WhatsApp e Discord</strong> com
+            editor visual drag & drop. Automatize atendimento, vendas e engajamento
+            <strong className="text-[#00BFFF]"> 24/7</strong> sem escrever código.
           </p>
 
           <p className="mx-auto mb-8 max-w-xl text-sm sm:text-base text-white/50">
-            Crie bots profissionais em minutos sem código: atendimento infinito, vendas automáticas,
+            Bots profissionais em minutos: atendimento infinito, vendas automáticas,
             leads qualificados e engajamento altíssimo.
           </p>
 
@@ -154,6 +153,21 @@ export default function Landing() {
             Por que Você <span className="text-[#00BFFF]">PRECISA</span> Automatizar Seu Negócio no Telegram Hoje?
           </h2>
           <p className="mb-12 text-center text-white/50">Quem não automatiza, perde clientes para quem automatiza.</p>
+
+          {/* Multi-platform badges */}
+          <div className="mb-10 flex flex-wrap items-center justify-center gap-3">
+            {[
+              { name: 'Telegram', emoji: '✈️' },
+              { name: 'WhatsApp', emoji: '💬', badge: 'BETA' },
+              { name: 'Discord', emoji: '#', badge: 'BETA' },
+            ].map((p) => (
+              <div key={p.name} className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/70">
+                <span>{p.emoji}</span> {p.name}
+                {p.badge && <span className="rounded-full bg-yellow-500/20 px-2 py-0.5 text-[10px] font-bold text-yellow-400">{p.badge}</span>}
+              </div>
+            ))}
+          </div>
+
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {urgencyReasons.map((r) => (
               <div key={r.title} className="group rounded-xl border border-white/5 bg-white/[0.02] p-6 transition-all hover:border-[#00BFFF]/30 hover:bg-[#00BFFF]/5">

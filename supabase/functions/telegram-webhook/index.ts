@@ -87,7 +87,7 @@ function evalCondition(cond: string, msg: string, vars: Record<string, any>): bo
   }
 }
 
-// Log a message to bot_messages for analytics and limit tracking
+// Log a message to bot_messages for analytics
 async function logMessage(
   sb: any,
   botId: string,
@@ -107,35 +107,6 @@ async function logMessage(
   });
 }
 
-// Check daily message limit for a bot's owner
-async function checkDailyLimit(sb: any, botId: string): Promise<{ allowed: boolean; count: number; limit: number }> {
-  // Get bot owner
-  const { data: bot } = await sb.from("bots").select("user_id").eq("id", botId).maybeSingle();
-  if (!bot) return { allowed: false, count: 0, limit: 0 };
-
-  // Check subscription
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  // Count today's messages for ALL bots of this user
-  const { data: userBots } = await sb.from("bots").select("id").eq("user_id", bot.user_id);
-  const botIds = userBots?.map((b: any) => b.id) || [];
-
-  const { count } = await sb
-    .from("bot_messages")
-    .select("*", { count: "exact", head: true })
-    .in("bot_id", botIds)
-    .gte("created_at", today.toISOString());
-
-  // For now, free plan = 50 msgs/day. Paid plans = unlimited.
-  // We check subscription status - if not subscribed, limit to 50
-  const limit = 10000000000000000000; // Free plan limit
-
-  // TODO: Check actual subscription via Stripe. For now, assume free plan.
-  // Paid users will have unlimited, so we return allowed: true if subscribed.
-
-  return { allowed: (count || 0) < limit, count: count || 0, limit };
-}
 
 async function continueFrom(
   nodeId: string,
@@ -489,18 +460,6 @@ Deno.serve(async (req) => {
 
       // Log incoming message
       await logMessage(sb, currentBotId, flowId, chatId, "incoming", msg, null);
-
-      // Check daily message limit
-      const limitCheck = await checkDailyLimit(sb, currentBotId);
-      if (!limitCheck.allowed) {
-        await tgCall(token, "sendMessage", {
-          chat_id: chatId,
-          text: `⚠️ Limite diário de mensagens atingido (${limitCheck.count}/${limitCheck.limit}). O proprietário do bot precisa fazer upgrade do plano para continuar.`,
-        });
-        return new Response(JSON.stringify({ ok: true, limit_reached: true }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
 
       if (isCb) await tgCall(token, "answerCallbackQuery", { callback_query_id: update.callback_query!.id });
 
