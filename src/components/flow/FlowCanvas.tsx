@@ -38,6 +38,7 @@ import { ChatGPTNode } from './nodes/ChatGPTNode';
 import { GroqNode } from './nodes/GroqNode';
 import { GeminiNode } from './nodes/GeminiNode';
 import { ScheduleNode } from './nodes/ScheduleNode';
+import { WebhookNode } from './nodes/WebhookNode';
 import { useFlow } from '@/contexts/FlowContext';
 
 const nodeTypes = {
@@ -68,9 +69,10 @@ const nodeTypes = {
   groq: GroqNode,
   gemini: GeminiNode,
   schedule: ScheduleNode,
+  webhook: WebhookNode,
 };
 
-const validNodeTypes: NodeType[] = ['start', 'message', 'condition', 'buttonReply', 'action', 'delay', 'image', 'userInput', 'location', 'httpRequest', 'video', 'audio', 'document', 'animation', 'sticker', 'poll', 'contact', 'venue', 'dice', 'invoice', 'editMessage', 'deleteMessage', 'mediaGroup', 'chatgpt', 'groq', 'gemini', 'schedule'];
+const validNodeTypes: NodeType[] = ['start', 'message', 'condition', 'buttonReply', 'action', 'delay', 'image', 'userInput', 'location', 'httpRequest', 'video', 'audio', 'document', 'animation', 'sticker', 'poll', 'contact', 'venue', 'dice', 'invoice', 'editMessage', 'deleteMessage', 'mediaGroup', 'chatgpt', 'groq', 'gemini', 'schedule', 'webhook'];
 
 export function FlowCanvas() {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
@@ -145,6 +147,7 @@ export function FlowCanvas() {
               deleteMessage: 'hsl(0, 65%, 45%)', mediaGroup: 'hsl(230, 65%, 55%)',
               chatgpt: 'hsl(160, 80%, 40%)', groq: 'hsl(20, 90%, 55%)', gemini: 'hsl(220, 80%, 60%)',
               schedule: 'hsl(38, 92%, 50%)',
+              webhook: 'hsl(240, 60%, 60%)',
             };
             return colors[node.type || ''] || 'hsl(220, 15%, 30%)';
           }}

@@ -1,4 +1,4 @@
-import { X, MessageSquare, GitBranch, MousePointerClick, Zap, Timer, Play, ImageIcon, MessageCircleQuestion, MapPin, Globe, Video, Music, FileText, Film, Smile, BarChart3, Phone, Home, Dices, CreditCard, Pencil, Trash2, Images, Bot, Cpu, Sparkles, Clock } from 'lucide-react';
+import { X, MessageSquare, GitBranch, MousePointerClick, Zap, Timer, Play, ImageIcon, MessageCircleQuestion, MapPin, Globe, Video, Music, FileText, Film, Smile, BarChart3, Phone, Home, Dices, CreditCard, Pencil, Trash2, Images, Bot, Cpu, Sparkles, Clock, Webhook } from 'lucide-react';
 import { FileUploadField } from './FileUploadField';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,6 +24,7 @@ const iconMap: Record<NodeType, React.ReactNode> = {
   mediaGroup: <Images className="h-4 w-4" />,
   chatgpt: <Bot className="h-4 w-4" />, groq: <Cpu className="h-4 w-4" />,
   gemini: <Sparkles className="h-4 w-4" />, schedule: <Clock className="h-4 w-4" />,
+  webhook: <Webhook className="h-4 w-4" />,
 };
 
 const colorMap: Record<NodeType, string> = {
@@ -37,6 +38,7 @@ const colorMap: Record<NodeType, string> = {
   deleteMessage: 'text-node-deleteMessage', mediaGroup: 'text-node-mediaGroup',
   chatgpt: 'text-node-chatgpt', groq: 'text-node-groq',
   gemini: 'text-node-gemini', schedule: 'text-amber-500',
+  webhook: 'text-indigo-500',
 };
 
 export function NodeEditorPanel() {
@@ -600,6 +602,36 @@ export function NodeEditorPanel() {
               </div>
             </div>
             <p className="text-[10px] text-muted-foreground">Este bloco dispara automaticamente no horário configurado e executa todos os blocos conectados abaixo dele, sem necessidade de interação do usuário.</p>
+          </div>
+        )}
+
+        {/* Webhook */}
+        {nodeType === 'webhook' && (
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">URL do Webhook (endpoint que será chamado)</Label>
+              <Input value={String(selectedNode.data.webhookUrl || '')} onChange={(e) => updateNodeData(selectedNode.id, { webhookUrl: e.target.value })} className="h-9 font-mono text-sm" placeholder="https://api.exemplo.com/webhook" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Método HTTP</Label>
+              <Select value={String(selectedNode.data.webhookMethod || 'POST')} onValueChange={(v) => updateNodeData(selectedNode.id, { webhookMethod: v as any })}>
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="GET">GET</SelectItem>
+                  <SelectItem value="POST">POST</SelectItem>
+                  <SelectItem value="PUT">PUT</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Headers (JSON, opcional)</Label>
+              <Textarea value={String(selectedNode.data.webhookHeaders || '')} onChange={(e) => updateNodeData(selectedNode.id, { webhookHeaders: e.target.value })} className="min-h-[60px] resize-none font-mono text-sm" placeholder='{"Authorization": "Bearer token"}' />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Salvar resposta na variável</Label>
+              <Input value={String(selectedNode.data.webhookSaveVariable || '')} onChange={(e) => updateNodeData(selectedNode.id, { webhookSaveVariable: e.target.value })} className="h-9 font-mono" placeholder="webhook_data" />
+            </div>
+            <p className="text-[10px] text-muted-foreground">Este bloco recebe dados de um webhook externo. Quando o endpoint for chamado, o fluxo será executado a partir deste ponto com os dados recebidos salvos na variável configurada.</p>
           </div>
         )}
 
