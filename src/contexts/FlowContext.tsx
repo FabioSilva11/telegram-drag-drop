@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
 import { useNodesState, useEdgesState, addEdge, Connection } from '@xyflow/react';
 import { FlowNode, FlowEdge, FlowNodeData, NodeType } from '@/types/flow';
 
@@ -44,6 +44,7 @@ const defaultNodeData: Record<NodeType, Partial<FlowNodeData>> = {
   groq: { label: 'Groq', aiPrompt: '', aiModel: 'llama3-70b-8192', aiApiUrl: 'https://api.groq.com/openai/v1/chat/completions', aiApiKey: '', aiSaveVariable: 'ai_response' },
   gemini: { label: 'Gemini', aiPrompt: '', aiModel: 'gemini-pro', aiApiUrl: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', aiApiKey: '', aiSaveVariable: 'ai_response' },
   schedule: { label: 'Agendamento', scheduleInterval: 1, scheduleIntervalUnit: 'hours', scheduleTime: '08:00', scheduleDays: [] },
+  webhook: { label: 'Webhook', webhookUrl: '', webhookMethod: 'POST', webhookHeaders: '', webhookSaveVariable: 'webhook_data' },
 };
 
 interface HistoryState {
@@ -80,30 +81,55 @@ export function FlowProvider({ children, botId }: { children: React.ReactNode; b
   const historyRef = useRef<HistoryState[]>([{ nodes: initialNodes, edges: initialEdges }]);
   const historyIndexRef = useRef(0);
   const isUndoRedoRef = useRef(false);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [, forceRender] = useState(0);
 
-  const saveHistory = useCallback(() => {
-    if (isUndoRedoRef.current) { isUndoRedoRef.current = false; return; }
-    historyRef.current = historyRef.current.slice(0, historyIndexRef.current + 1);
-    historyRef.current.push({ nodes: JSON.parse(JSON.stringify(nodes)), edges: JSON.parse(JSON.stringify(edges)) });
-    historyIndexRef.current = historyRef.current.length - 1;
-    if (historyRef.current.length > 50) { historyRef.current.shift(); historyIndexRef.current--; }
+  // Debounced history save — captures state after changes settle
+  useEffect(() => {
+    if (isUndoRedoRef.current) {
+      isUndoRedoRef.current = false;
+      return;
+    }
+
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    debounceTimerRef.current = setTimeout(() => {
+      const currentState = { nodes: JSON.parse(JSON.stringify(nodes)), edges: JSON.parse(JSON.stringify(edges)) };
+      const lastState = historyRef.current[historyIndexRef.current];
+      
+      // Only save if something actually changed
+      if (JSON.stringify(currentState) === JSON.stringify(lastState)) return;
+      
+      // Trim future states
+      historyRef.current = historyRef.current.slice(0, historyIndexRef.current + 1);
+      historyRef.current.push(currentState);
+      historyIndexRef.current = historyRef.current.length - 1;
+      
+      // Limit history size
+      if (historyRef.current.length > 50) {
+        historyRef.current.shift();
+        historyIndexRef.current--;
+      }
+      forceRender(n => n + 1);
+    }, 300);
+
+    return () => {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    };
   }, [nodes, edges]);
 
   const onConnect = useCallback(
     (connection: Connection) => {
       setEdges((eds) => addEdge({ ...connection, animated: true, style: { stroke: 'hsl(200, 85%, 50%)', strokeWidth: 2 } }, eds));
-      setTimeout(saveHistory, 0);
     },
-    [setEdges, saveHistory]
+    [setEdges]
   );
 
   const addNode = useCallback(
     (type: NodeType, position: { x: number; y: number }) => {
       const newNode: FlowNode = { id: getNewId(), type, position, data: { type, ...defaultNodeData[type] } as FlowNodeData };
       setNodes((nds) => [...nds, newNode]);
-      setTimeout(saveHistory, 0);
     },
-    [setNodes, saveHistory]
+    [setNodes]
   );
 
   const updateNodeData = useCallback(
@@ -113,9 +139,8 @@ export function FlowProvider({ children, botId }: { children: React.ReactNode; b
         if (current && current.id === nodeId) return { ...current, data: { ...current.data, ...data } as FlowNodeData };
         return current;
       });
-      setTimeout(saveHistory, 0);
     },
-    [setNodes, saveHistory]
+    [setNodes]
   );
 
   const undo = useCallback(() => {
@@ -125,6 +150,7 @@ export function FlowProvider({ children, botId }: { children: React.ReactNode; b
       isUndoRedoRef.current = true;
       setNodes(JSON.parse(JSON.stringify(state.nodes)));
       setEdges(JSON.parse(JSON.stringify(state.edges)));
+      forceRender(n => n + 1);
     }
   }, [setNodes, setEdges]);
 
@@ -135,14 +161,14 @@ export function FlowProvider({ children, botId }: { children: React.ReactNode; b
       isUndoRedoRef.current = true;
       setNodes(JSON.parse(JSON.stringify(state.nodes)));
       setEdges(JSON.parse(JSON.stringify(state.edges)));
+      forceRender(n => n + 1);
     }
   }, [setNodes, setEdges]);
 
   const clearCanvas = useCallback(() => {
     setNodes(initialNodes);
     setEdges([]);
-    setTimeout(saveHistory, 0);
-  }, [setNodes, setEdges, saveHistory]);
+  }, [setNodes, setEdges]);
 
   const canUndo = historyIndexRef.current > 0;
   const canRedo = historyIndexRef.current < historyRef.current.length - 1;
