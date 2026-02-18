@@ -1,4 +1,4 @@
-import { X, MessageSquare, GitBranch, MousePointerClick, Zap, Timer, Play, ImageIcon, MessageCircleQuestion, MapPin, Globe, Video, Music, FileText, Film, Smile, BarChart3, Phone, Home, Dices, CreditCard, Pencil, Trash2, Images, Bot, Cpu, Sparkles } from 'lucide-react';
+import { X, MessageSquare, GitBranch, MousePointerClick, Zap, Timer, Play, ImageIcon, MessageCircleQuestion, MapPin, Globe, Video, Music, FileText, Film, Smile, BarChart3, Phone, Home, Dices, CreditCard, Pencil, Trash2, Images, Bot, Cpu, Sparkles, Clock } from 'lucide-react';
 import { FileUploadField } from './FileUploadField';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,7 +23,7 @@ const iconMap: Record<NodeType, React.ReactNode> = {
   editMessage: <Pencil className="h-4 w-4" />, deleteMessage: <Trash2 className="h-4 w-4" />,
   mediaGroup: <Images className="h-4 w-4" />,
   chatgpt: <Bot className="h-4 w-4" />, groq: <Cpu className="h-4 w-4" />,
-  gemini: <Sparkles className="h-4 w-4" />,
+  gemini: <Sparkles className="h-4 w-4" />, schedule: <Clock className="h-4 w-4" />,
 };
 
 const colorMap: Record<NodeType, string> = {
@@ -36,7 +36,7 @@ const colorMap: Record<NodeType, string> = {
   dice: 'text-node-dice', invoice: 'text-node-invoice', editMessage: 'text-node-editMessage',
   deleteMessage: 'text-node-deleteMessage', mediaGroup: 'text-node-mediaGroup',
   chatgpt: 'text-node-chatgpt', groq: 'text-node-groq',
-  gemini: 'text-node-gemini',
+  gemini: 'text-node-gemini', schedule: 'text-amber-500',
 };
 
 export function NodeEditorPanel() {
@@ -45,7 +45,7 @@ export function NodeEditorPanel() {
   const nodeType = selectedNode.data.type;
 
   return (
-    <div className="absolute right-4 top-4 z-10 w-80 rounded-xl border border-border bg-card shadow-xl animate-in slide-in-from-right-4 max-h-[calc(100vh-120px)] overflow-y-auto">
+    <div className="absolute right-4 top-4 z-10 w-80 rounded-xl border border-border bg-card shadow-xl animate-in slide-in-from-right-4 max-h-[calc(100vh-120px)] overflow-y-auto" onPointerDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
       <div className="flex items-center justify-between border-b border-border px-4 py-3 sticky top-0 bg-card rounded-t-xl z-10">
         <div className="flex items-center gap-2">
           <span className={colorMap[nodeType]}>{iconMap[nodeType]}</span>
@@ -553,6 +553,53 @@ export function NodeEditorPanel() {
               <Label className="text-xs text-muted-foreground">Salvar resposta na variável</Label>
               <Input value={String(selectedNode.data.aiSaveVariable || '')} onChange={(e) => updateNodeData(selectedNode.id, { aiSaveVariable: e.target.value })} className="h-9 font-mono" placeholder="ai_response" />
             </div>
+          </div>
+        )}
+
+        {/* Schedule */}
+        {nodeType === 'schedule' && (
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Intervalo</Label>
+              <div className="flex gap-2">
+                <Input type="number" value={selectedNode.data.scheduleInterval || 1} onChange={(e) => updateNodeData(selectedNode.id, { scheduleInterval: parseInt(e.target.value) || 1 })} className="h-9" min={1} />
+                <Select value={selectedNode.data.scheduleIntervalUnit || 'hours'} onValueChange={(v) => updateNodeData(selectedNode.id, { scheduleIntervalUnit: v as any })}>
+                  <SelectTrigger className="h-9 w-32"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="minutes">Minutos</SelectItem>
+                    <SelectItem value="hours">Horas</SelectItem>
+                    <SelectItem value="days">Dias</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Horário de disparo</Label>
+              <Input type="time" value={selectedNode.data.scheduleTime || '08:00'} onChange={(e) => updateNodeData(selectedNode.id, { scheduleTime: e.target.value })} className="h-9" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Dias da semana (deixe vazio para todos)</Label>
+              <div className="flex flex-wrap gap-1.5">
+                {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map((day) => {
+                  const selected = (selectedNode.data.scheduleDays || []).includes(day);
+                  return (
+                    <button
+                      key={day}
+                      type="button"
+                      className={`rounded-md border px-2.5 py-1 text-xs font-medium transition-colors ${selected ? 'border-amber-500 bg-amber-500/20 text-amber-400' : 'border-border bg-muted/10 text-muted-foreground hover:bg-muted/20'}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const days = selectedNode.data.scheduleDays || [];
+                        updateNodeData(selectedNode.id, { scheduleDays: selected ? days.filter(d => d !== day) : [...days, day] });
+                      }}
+                    >
+                      {day}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <p className="text-[10px] text-muted-foreground">Este bloco dispara automaticamente no horário configurado e executa todos os blocos conectados abaixo dele, sem necessidade de interação do usuário.</p>
           </div>
         )}
 

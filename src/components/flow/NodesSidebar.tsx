@@ -3,7 +3,7 @@ import {
   Play, MessageSquare, GitBranch, MousePointerClick, Zap, Timer, Bot, Settings,
   ImageIcon, MessageCircleQuestion, MapPin, Globe, Video, Music, FileText, Film,
   Smile, BarChart3, Phone, Home, Dices, CreditCard, Pencil, Trash2, Images, Lock,
-  Cpu, Sparkles, MessageCircle, Hash,
+  Cpu, Sparkles, MessageCircle, Hash, Clock,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -37,6 +37,7 @@ const allNodeItems: DragItem[] = [
   { type: 'chatgpt', label: 'ChatGPT', icon: 'chatgpt', description: 'IA via API OpenAI' },
   { type: 'groq', label: 'Groq', icon: 'groq', description: 'IA ultra-rápida via Groq' },
   { type: 'gemini', label: 'Gemini', icon: 'gemini', description: 'IA Google Gemini' },
+  { type: 'schedule', label: 'Agendamento', icon: 'schedule', description: 'Ação programada por horário' },
 ];
 
 // Blocks available per platform
@@ -44,18 +45,18 @@ const telegramBlocks: NodeType[] = [
   'start', 'message', 'image', 'buttonReply', 'userInput', 'condition',
   'video', 'audio', 'document', 'animation', 'sticker', 'poll', 'contact',
   'venue', 'location', 'dice', 'invoice', 'editMessage', 'deleteMessage',
-  'mediaGroup', 'action', 'httpRequest', 'delay', 'chatgpt', 'groq', 'gemini',
+  'mediaGroup', 'action', 'httpRequest', 'delay', 'chatgpt', 'groq', 'gemini', 'schedule',
 ];
 
 const whatsappBlocks: NodeType[] = [
   'start', 'message', 'image', 'buttonReply', 'userInput', 'condition',
   'video', 'audio', 'document', 'location', 'contact',
-  'action', 'httpRequest', 'delay', 'chatgpt', 'groq', 'gemini',
+  'action', 'httpRequest', 'delay', 'chatgpt', 'groq', 'gemini', 'schedule',
 ];
 
 const discordBlocks: NodeType[] = [
   'start', 'message', 'image', 'buttonReply', 'userInput', 'condition',
-  'action', 'httpRequest', 'delay', 'chatgpt', 'groq', 'gemini',
+  'action', 'httpRequest', 'delay', 'chatgpt', 'groq', 'gemini', 'schedule',
 ];
 
 const platformBlockMap: Record<Platform, NodeType[]> = {
@@ -97,6 +98,7 @@ const iconMap: Record<string, React.ReactNode> = {
   chatgpt: <Bot className="h-4 w-4" />,
   groq: <Cpu className="h-4 w-4" />,
   gemini: <Sparkles className="h-4 w-4" />,
+  schedule: <Clock className="h-4 w-4" />,
 };
 
 const colorMap: Record<NodeType, string> = {
@@ -126,6 +128,7 @@ const colorMap: Record<NodeType, string> = {
   chatgpt: 'border-node-chatgpt/40 hover:border-node-chatgpt/70 text-node-chatgpt bg-node-chatgpt/5 hover:bg-node-chatgpt/10',
   groq: 'border-node-groq/40 hover:border-node-groq/70 text-node-groq bg-node-groq/5 hover:bg-node-groq/10',
   gemini: 'border-node-gemini/40 hover:border-node-gemini/70 text-node-gemini bg-node-gemini/5 hover:bg-node-gemini/10',
+  schedule: 'border-amber-500/40 hover:border-amber-500/70 text-amber-500 bg-amber-500/5 hover:bg-amber-500/10',
 };
 
 const platformIconMap: Record<Platform, React.ReactNode> = {
