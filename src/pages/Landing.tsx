@@ -16,11 +16,11 @@ const platforms = [
 ];
 
 const urgencyReasons = [
-  { icon: Users, title: 'Atendimento 24/7 em 3 plataformas', desc: 'Bots respondem no Telegram, WhatsApp e Discord simultaneamente.' },
+  { icon: Clock, title: 'Atendimento 24/7 em 3 plataformas', desc: 'Bots respondem no Telegram, WhatsApp e Discord simultaneamente.' },
   { icon: TrendingUp, title: 'Vendas no piloto automático', desc: 'Capture leads, envie catálogos e feche vendas em qualquer chat.' },
   { icon: Zap, title: 'Engajamento altíssimo', desc: 'Taxas de abertura muito maiores que email ou redes sociais.' },
   { icon: DollarSign, title: 'Custo baixo, retorno rápido', desc: 'Comece grátis com todas as plataformas, escale por R$49/mês.' },
-  { icon: Lock, title: 'Segurança total', desc: 'Tokens criptografados, dados protegidos por RLS.' },
+  { icon: Shield, title: 'Segurança total', desc: 'Tokens criptografados, dados protegidos por RLS.' },
   { icon: Globe, title: 'Multiplataforma nativo', desc: 'Um editor, três plataformas. Mesmo fluxo, alcance máximo.' },
 ];
 
@@ -77,9 +77,50 @@ const NAV_LINKS = [
   { label: 'FAQ', href: '#faq' },
 ];
 
+// Animated background particles
+function FloatingParticles() {
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      {/* Large glow orbs */}
+      <div className="absolute top-[10%] left-[20%] h-[400px] w-[400px] rounded-full bg-purple-600/[0.07] blur-[100px] animate-pulse" style={{ animationDuration: '4s' }} />
+      <div className="absolute top-[50%] right-[10%] h-[300px] w-[300px] rounded-full bg-purple-500/[0.05] blur-[80px] animate-pulse" style={{ animationDuration: '6s', animationDelay: '2s' }} />
+      <div className="absolute bottom-[20%] left-[10%] h-[350px] w-[350px] rounded-full bg-purple-700/[0.06] blur-[90px] animate-pulse" style={{ animationDuration: '5s', animationDelay: '1s' }} />
+      
+      {/* Small floating dots */}
+      {[
+        { top: '15%', left: '12%', size: 3, delay: '0s', dur: '3s' },
+        { top: '25%', left: '85%', size: 2, delay: '1s', dur: '4s' },
+        { top: '45%', left: '8%', size: 2, delay: '2s', dur: '3.5s' },
+        { top: '60%', left: '90%', size: 3, delay: '0.5s', dur: '4.5s' },
+        { top: '75%', left: '25%', size: 2, delay: '1.5s', dur: '3s' },
+        { top: '35%', left: '50%', size: 2, delay: '3s', dur: '5s' },
+        { top: '80%', left: '70%', size: 3, delay: '2.5s', dur: '4s' },
+        { top: '10%', left: '60%', size: 2, delay: '0.8s', dur: '3.8s' },
+        { top: '55%', left: '40%', size: 2, delay: '1.2s', dur: '4.2s' },
+        { top: '90%', left: '55%', size: 2, delay: '2s', dur: '3.5s' },
+      ].map((p, i) => (
+        <div
+          key={i}
+          className="absolute rounded-full bg-purple-400/30 animate-pulse"
+          style={{
+            top: p.top,
+            left: p.left,
+            width: p.size,
+            height: p.size,
+            animationDelay: p.delay,
+            animationDuration: p.dur,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-[#0a0e17] text-foreground" style={{ fontFamily: "'Inter', 'Space Grotesk', sans-serif" }}>
+    <div className="min-h-screen bg-[#0a0e17] text-white relative" style={{ fontFamily: "'Inter', 'Space Grotesk', sans-serif" }}>
+      <FloatingParticles />
+
       {/* Nav */}
       <nav className="sticky top-0 z-50 border-b border-white/5 bg-[#0a0e17]/90 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
@@ -98,10 +139,10 @@ export default function Landing() {
           </div>
           <div className="flex items-center gap-3">
             <Link to="/auth">
-              <Button variant="ghost" size="sm" className="text-white/70 hover:text-white">Entrar</Button>
+              <Button variant="ghost" size="sm" className="text-white/70 hover:text-white hover:bg-white/5">Entrar</Button>
             </Link>
             <Link to="/auth?mode=signup">
-              <Button size="sm" className="bg-purple-600 text-white font-semibold hover:bg-purple-500 transition-all hover:scale-105">
+              <Button size="sm" className="bg-purple-600 text-white font-semibold hover:bg-purple-500 transition-all hover:scale-105 rounded-full px-5">
                 Começar Grátis
               </Button>
             </Link>
@@ -110,16 +151,11 @@ export default function Landing() {
       </nav>
 
       {/* Hero */}
-      <section className="relative overflow-hidden px-6 py-20 sm:py-28">
-        <div className="absolute inset-0 bg-gradient-to-b from-purple-600/8 via-transparent to-transparent" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[600px] w-[600px] rounded-full bg-purple-600/8 blur-[120px]" />
-        {/* Floating particles */}
-        <div className="absolute top-[20%] left-[15%] h-1.5 w-1.5 rounded-full bg-purple-400/40 animate-pulse" />
-        <div className="absolute top-[30%] right-[20%] h-1 w-1 rounded-full bg-purple-400/30 animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-[60%] left-[10%] h-1 w-1 rounded-full bg-purple-400/20 animate-pulse" style={{ animationDelay: '2s' }} />
-        <div className="absolute top-[70%] right-[15%] h-1.5 w-1.5 rounded-full bg-purple-400/30 animate-pulse" style={{ animationDelay: '0.5s' }} />
+      <section className="relative overflow-hidden px-6 py-24 sm:py-32">
+        <div className="absolute inset-0 bg-gradient-to-b from-purple-600/10 via-transparent to-transparent" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[700px] w-[700px] rounded-full bg-purple-600/10 blur-[150px]" />
         <div className="relative mx-auto max-w-4xl text-center">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-purple-500/30 bg-purple-500/10 px-4 py-1.5 text-sm text-purple-400">
+          <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-purple-500/30 bg-purple-500/10 px-4 py-1.5 text-sm text-purple-400">
             <span className="h-2 w-2 rounded-full bg-purple-400 animate-pulse" /> Plataforma No-Code para Bots
           </div>
 
@@ -131,17 +167,17 @@ export default function Landing() {
             e <span className="text-purple-400">Discord</span>
           </h1>
 
-          <p className="mx-auto mb-6 max-w-2xl text-base sm:text-lg text-white/50 leading-relaxed">
+          <p className="mx-auto mb-8 max-w-2xl text-base sm:text-lg text-white/50 leading-relaxed">
             Crie bots profissionais para <strong className="text-white">3 plataformas</strong> com
             editor visual drag & drop. Automatize atendimento, vendas e engajamento
             <strong className="text-purple-400"> 24/7</strong> sem escrever código.
           </p>
 
           {/* Platform badges */}
-          <div className="mb-8 flex flex-wrap items-center justify-center gap-3">
+          <div className="mb-10 flex flex-wrap items-center justify-center gap-3">
             {platforms.map((p) => (
-              <div key={p.name} className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80">
-                <span>{p.emoji}</span> {p.name}
+              <div key={p.name} className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-2.5 text-sm text-white/80 backdrop-blur-sm">
+                <span className="text-lg">{p.emoji}</span> {p.name}
                 {p.badge && <Badge variant="outline" className="text-[9px] px-1.5 py-0 border-yellow-500/50 text-yellow-400">{p.badge}</Badge>}
               </div>
             ))}
@@ -150,7 +186,7 @@ export default function Landing() {
           <Link to="/auth?mode=signup">
             <Button
               size="lg"
-              className="gap-2 bg-purple-600 text-white font-bold text-base sm:text-lg px-8 py-6 rounded-xl hover:bg-purple-500 transition-all hover:scale-105 shadow-[0_0_30px_rgba(147,51,234,0.3)]"
+              className="gap-2 bg-purple-600 text-white font-bold text-base sm:text-lg px-10 py-6 rounded-full hover:bg-purple-500 transition-all hover:scale-105 shadow-[0_0_40px_rgba(147,51,234,0.4)]"
             >
               Criar Minha Conta Grátis <ArrowRight className="h-5 w-5" />
             </Button>
@@ -159,10 +195,10 @@ export default function Landing() {
       </section>
 
       {/* Metrics */}
-      <section className="border-t border-white/5 px-6 py-16">
-        <div className="mx-auto grid max-w-5xl grid-cols-2 gap-8 sm:grid-cols-4">
+      <section className="relative border-t border-white/5 px-6 py-16">
+        <div className="mx-auto grid max-w-5xl grid-cols-2 gap-6 sm:grid-cols-4">
           {metrics.map((m) => (
-            <div key={m.label} className="text-center rounded-xl border border-white/10 bg-white/[0.02] py-6 px-4">
+            <div key={m.label} className="text-center rounded-xl border border-purple-500/20 bg-white/[0.02] py-6 px-4 backdrop-blur-sm">
               <p className="text-3xl font-extrabold text-purple-400">{m.value}</p>
               <p className="mt-1 text-sm text-white/50">{m.label}</p>
             </div>
@@ -171,7 +207,7 @@ export default function Landing() {
       </section>
 
       {/* Platforms Section */}
-      <section id="plataformas" className="border-t border-white/5 px-6 py-20">
+      <section id="plataformas" className="relative border-t border-white/5 px-6 py-20">
         <div className="mx-auto max-w-5xl">
           <h2 className="mb-4 text-center text-3xl sm:text-4xl font-bold text-white">
             Uma Plataforma, <span className="text-purple-400">3 Canais</span>
@@ -179,9 +215,9 @@ export default function Landing() {
           <p className="mb-12 text-center text-white/50">Mesmo editor, mesmo fluxo. Publique onde seu público está.</p>
           <div className="grid gap-6 sm:grid-cols-3">
             {platforms.map((p) => (
-              <div key={p.name} className="group rounded-xl border border-white/10 bg-white/[0.02] p-6 text-center transition-all hover:border-purple-500/30 hover:bg-purple-500/5">
-                <div className="mb-4 text-5xl">{p.emoji}</div>
-                <h3 className="font-semibold text-white flex items-center justify-center gap-2 mb-2">
+              <div key={p.name} className="group rounded-xl border border-purple-500/20 bg-white/[0.02] p-8 text-center transition-all hover:border-purple-500/40 hover:bg-purple-500/5 backdrop-blur-sm">
+                <div className="mb-5 text-6xl">{p.emoji}</div>
+                <h3 className="font-bold text-lg text-white flex items-center justify-center gap-2 mb-3">
                   {p.name}
                   {p.badge && <Badge variant="outline" className="text-[9px] px-1.5 py-0 border-yellow-500/50 text-yellow-400">{p.badge}</Badge>}
                 </h3>
@@ -193,32 +229,32 @@ export default function Landing() {
       </section>
 
       {/* Editor Preview */}
-      <section className="border-t border-white/5 px-6 py-20">
+      <section className="relative border-t border-white/5 px-6 py-20">
         <div className="mx-auto max-w-5xl">
           <h2 className="mb-4 text-center text-3xl sm:text-4xl font-bold text-white">
             Editor Visual <span className="text-purple-400">Intuitivo</span>
           </h2>
           <p className="mb-10 text-center text-white/50">Arraste, solte e conecte blocos — sem código, sem complicação.</p>
-          <div className="relative rounded-2xl border border-white/10 bg-white/[0.02] p-2 shadow-[0_0_60px_rgba(147,51,234,0.08)]">
+          <div className="relative rounded-2xl border border-purple-500/20 bg-white/[0.02] p-2 shadow-[0_0_80px_rgba(147,51,234,0.1)]">
             <img src={editorPreview} alt="FlowBot Editor Visual - Interface de criação de bots multiplataforma" className="w-full rounded-xl" />
           </div>
         </div>
       </section>
 
       {/* Urgency Section */}
-      <section className="border-t border-white/5 px-6 py-20">
+      <section className="relative border-t border-purple-500/10 bg-gradient-to-b from-purple-900/5 to-transparent px-6 py-20">
         <div className="mx-auto max-w-5xl">
           <h2 className="mb-4 text-center text-3xl sm:text-4xl font-bold text-white">
             Por que Você <span className="text-purple-400">PRECISA</span> Automatizar Hoje?
           </h2>
           <p className="mb-12 text-center text-white/50">Quem não automatiza, perde clientes para quem automatiza.</p>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 sm:grid-cols-2">
             {urgencyReasons.map((r) => (
-              <div key={r.title} className="group rounded-xl border border-white/10 bg-white/[0.02] p-6 transition-all hover:border-purple-500/30 hover:bg-purple-500/5">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-purple-500/10 group-hover:bg-purple-500/20 transition-colors">
+              <div key={r.title} className="group rounded-xl border border-purple-500/20 bg-white/[0.02] p-6 transition-all hover:border-purple-500/40 hover:bg-purple-500/5 backdrop-blur-sm">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-purple-500/15 group-hover:bg-purple-500/25 transition-colors">
                   <r.icon className="h-6 w-6 text-purple-400" />
                 </div>
-                <h3 className="mb-2 font-semibold text-white">{r.title}</h3>
+                <h3 className="mb-2 font-bold text-white">{r.title}</h3>
                 <p className="text-sm text-white/50">{r.desc}</p>
               </div>
             ))}
@@ -227,19 +263,19 @@ export default function Landing() {
       </section>
 
       {/* How It Works */}
-      <section id="como-funciona" className="border-t border-white/5 px-6 py-20">
+      <section id="como-funciona" className="relative border-t border-white/5 px-6 py-20">
         <div className="mx-auto max-w-4xl">
           <h2 className="mb-4 text-center text-3xl sm:text-4xl font-bold text-white">
             Como <span className="text-purple-400">Funciona</span>
           </h2>
-          <p className="mb-12 text-center text-white/50">4 passos simples para automatizar seu negócio</p>
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          <p className="mb-14 text-center text-white/50">4 passos simples para automatizar seu negócio</p>
+          <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-4">
             {howItWorks.map((s) => (
               <div key={s.step} className="text-center">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-purple-600 text-xl font-bold text-white shadow-[0_0_25px_rgba(147,51,234,0.4)]">
+                <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-purple-600 text-xl font-bold text-white shadow-[0_0_30px_rgba(147,51,234,0.5)]">
                   {s.step}
                 </div>
-                <h3 className="mb-2 font-semibold text-white">{s.title}</h3>
+                <h3 className="mb-2 font-bold text-white">{s.title}</h3>
                 <p className="text-sm text-white/50">{s.desc}</p>
               </div>
             ))}
@@ -248,19 +284,19 @@ export default function Landing() {
       </section>
 
       {/* Features */}
-      <section id="recursos" className="border-t border-white/5 px-6 py-20">
-        <div className="mx-auto max-w-6xl">
+      <section id="recursos" className="relative border-t border-white/5 px-6 py-20">
+        <div className="mx-auto max-w-5xl">
           <h2 className="mb-4 text-center text-3xl sm:text-4xl font-bold text-white">
             Ferramentas <span className="text-purple-400">Poderosas</span> para Todas as Plataformas
           </h2>
           <p className="mb-12 text-center text-white/50">Tudo que você precisa para criar bots profissionais</p>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 sm:grid-cols-2">
             {features.map((f) => (
-              <div key={f.title} className="group rounded-xl border border-white/10 bg-white/[0.02] p-6 transition-all hover:border-purple-500/30">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-purple-500/10">
+              <div key={f.title} className="group rounded-xl border border-purple-500/20 bg-white/[0.02] p-6 transition-all hover:border-purple-500/40 backdrop-blur-sm">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-purple-500/15">
                   <f.icon className="h-5 w-5 text-purple-400" />
                 </div>
-                <h3 className="mb-2 font-semibold text-white">{f.title}</h3>
+                <h3 className="mb-2 font-bold text-white">{f.title}</h3>
                 <p className="text-sm text-white/50">{f.desc}</p>
               </div>
             ))}
@@ -269,7 +305,7 @@ export default function Landing() {
       </section>
 
       {/* Pricing */}
-      <section id="precos" className="border-t border-white/5 px-6 py-20">
+      <section id="precos" className="relative border-t border-white/5 px-6 py-20">
         <div className="mx-auto max-w-5xl">
           <h2 className="mb-4 text-center text-3xl sm:text-4xl font-bold text-white">
             Planos & <span className="text-purple-400">Preços</span>
@@ -279,21 +315,21 @@ export default function Landing() {
             {plans.map((p) => (
               <div
                 key={p.name}
-                className={`relative rounded-2xl border p-6 transition-all ${
+                className={`relative rounded-2xl border p-6 transition-all backdrop-blur-sm ${
                   p.highlight
                     ? 'border-purple-500 bg-purple-500/5 shadow-[0_0_40px_rgba(147,51,234,0.15)]'
-                    : 'border-white/10 bg-white/[0.02]'
+                    : 'border-purple-500/20 bg-white/[0.02]'
                 }`}
               >
                 {p.badge && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-purple-600 px-4 py-1 text-xs font-bold text-white">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-purple-600 px-4 py-1 text-xs font-bold text-white shadow-[0_0_20px_rgba(147,51,234,0.4)]">
                     {p.badge}
                   </div>
                 )}
-                <h3 className="font-semibold text-white">{p.name}</h3>
+                <h3 className="font-bold text-white">{p.name}</h3>
                 <div className="mt-2 text-3xl font-bold text-purple-400">{p.price}</div>
                 <p className="mb-6 text-sm text-white/50">{p.sub}</p>
-                <ul className="mb-6 space-y-2">
+                <ul className="mb-6 space-y-2.5">
                   {p.features.map((f) => (
                     <li key={f} className="flex items-center gap-2 text-sm text-white/60">
                       <Check className="h-4 w-4 text-purple-400 shrink-0" /> {f}
@@ -302,10 +338,10 @@ export default function Landing() {
                 </ul>
                 <Link to="/auth?mode=signup">
                   <Button
-                    className={`w-full font-semibold transition-all hover:scale-105 ${
+                    className={`w-full font-semibold transition-all hover:scale-105 rounded-full ${
                       p.highlight
-                        ? 'bg-purple-600 text-white hover:bg-purple-500'
-                        : 'border border-white/10 bg-white/5 text-white hover:bg-white/10'
+                        ? 'bg-purple-600 text-white hover:bg-purple-500 shadow-[0_0_20px_rgba(147,51,234,0.3)]'
+                        : 'border border-purple-500/20 bg-white/5 text-white hover:bg-white/10'
                     }`}
                   >
                     {p.highlight ? 'Começar Agora' : 'Selecionar'} <ChevronRight className="h-4 w-4 ml-1" />
@@ -318,21 +354,21 @@ export default function Landing() {
       </section>
 
       {/* Testimonials */}
-      <section className="border-t border-white/5 px-6 py-20">
+      <section className="relative border-t border-white/5 px-6 py-20">
         <div className="mx-auto max-w-5xl">
           <h2 className="mb-12 text-center text-3xl sm:text-4xl font-bold text-white">
             O Que Estão <span className="text-purple-400">Dizendo</span>
           </h2>
           <div className="grid gap-6 sm:grid-cols-3">
             {testimonials.map((t) => (
-              <div key={t.name} className="rounded-xl border border-white/10 bg-white/[0.02] p-6">
+              <div key={t.name} className="rounded-xl border border-purple-500/20 bg-white/[0.02] p-6 backdrop-blur-sm">
                 <div className="mb-3 flex gap-1">
                   {Array.from({ length: t.stars }).map((_, i) => (
                     <Star key={i} className="h-4 w-4 fill-purple-400 text-purple-400" />
                   ))}
                 </div>
                 <p className="mb-4 text-sm text-white/60">{t.text}</p>
-                <p className="font-semibold text-white">{t.name}</p>
+                <p className="font-bold text-white">{t.name}</p>
                 <p className="text-xs text-white/40">{t.role}</p>
               </div>
             ))}
@@ -341,14 +377,14 @@ export default function Landing() {
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="border-t border-white/5 px-6 py-20">
+      <section id="faq" className="relative border-t border-white/5 px-6 py-20">
         <div className="mx-auto max-w-2xl">
           <h2 className="mb-12 text-center text-3xl sm:text-4xl font-bold text-white">
             Perguntas <span className="text-purple-400">Frequentes</span>
           </h2>
           <Accordion type="single" collapsible className="space-y-3">
             {faqs.map((f, i) => (
-              <AccordionItem key={i} value={`faq-${i}`} className="rounded-xl border border-white/10 bg-white/[0.02] px-6">
+              <AccordionItem key={i} value={`faq-${i}`} className="rounded-xl border border-purple-500/20 bg-white/[0.02] px-6 backdrop-blur-sm">
                 <AccordionTrigger className="text-left text-sm font-medium text-white hover:no-underline">{f.q}</AccordionTrigger>
                 <AccordionContent className="text-sm text-white/50">{f.a}</AccordionContent>
               </AccordionItem>
@@ -358,9 +394,9 @@ export default function Landing() {
       </section>
 
       {/* Footer CTA */}
-      <section className="border-t border-white/5 px-6 py-20">
+      <section className="relative border-t border-purple-500/10 px-6 py-20">
         <div className="mx-auto max-w-3xl text-center">
-          <div className="rounded-2xl border border-purple-500/20 bg-gradient-to-b from-purple-500/10 to-transparent p-10">
+          <div className="rounded-2xl border border-purple-500/30 bg-gradient-to-b from-purple-500/10 to-purple-900/5 p-10 backdrop-blur-sm">
             <h2 className="mb-6 text-2xl sm:text-3xl font-bold text-white">
               Automatize <span className="text-purple-400">Telegram</span>, <span className="text-purple-400">WhatsApp</span>{' '}
               e <span className="text-purple-400">Discord</span> — Tudo de Graça
@@ -369,7 +405,7 @@ export default function Landing() {
             <Link to="/auth?mode=signup">
               <Button
                 size="lg"
-                className="gap-2 bg-purple-600 text-white font-bold text-base px-8 py-6 rounded-xl hover:bg-purple-500 transition-all hover:scale-105 shadow-[0_0_30px_rgba(147,51,234,0.3)]"
+                className="gap-2 bg-purple-600 text-white font-bold text-base px-10 py-6 rounded-full hover:bg-purple-500 transition-all hover:scale-105 shadow-[0_0_40px_rgba(147,51,234,0.4)]"
               >
                 Criar Conta Grátis Agora <Sparkles className="h-5 w-5" />
               </Button>
@@ -379,7 +415,7 @@ export default function Landing() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-white/5 px-6 py-8">
+      <footer className="relative border-t border-white/5 px-6 py-8">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500/15">

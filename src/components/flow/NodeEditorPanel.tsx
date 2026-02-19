@@ -1,4 +1,5 @@
 import { X, MessageSquare, GitBranch, MousePointerClick, Zap, Timer, Play, ImageIcon, MessageCircleQuestion, MapPin, Globe, Video, Music, FileText, Film, Smile, BarChart3, Phone, Home, Dices, CreditCard, Pencil, Trash2, Images, Bot, Cpu, Sparkles, Clock, Webhook } from 'lucide-react';
+import { toast } from 'sonner';
 import { FileUploadField } from './FileUploadField';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -606,34 +607,26 @@ export function NodeEditorPanel() {
         )}
 
         {/* Webhook */}
-        {nodeType === 'webhook' && (
-          <div className="space-y-3">
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">URL do Webhook (endpoint que será chamado)</Label>
-              <Input value={String(selectedNode.data.webhookUrl || '')} onChange={(e) => updateNodeData(selectedNode.id, { webhookUrl: e.target.value })} className="h-9 font-mono text-sm" placeholder="https://api.exemplo.com/webhook" />
+        {nodeType === 'webhook' && (() => {
+          const webhookEndpoint = `https://jdkispdudszhskqfylkd.supabase.co/functions/v1/webhook-receiver?nodeId=${selectedNode.id}&flowId=${(window.location.pathname.split('/').pop() || '')}`;
+          return (
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">URL do Webhook (envie POST para este endpoint)</Label>
+                <div className="flex gap-1.5">
+                  <Input value={webhookEndpoint} readOnly className="h-9 font-mono text-[10px] bg-muted/20" />
+                  <Button variant="outline" size="sm" className="h-9 shrink-0 text-xs" onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(webhookEndpoint); toast.success('URL copiada!'); }}>Copiar</Button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Prefixo da variável</Label>
+                <Input value={String(selectedNode.data.webhookSaveVariable || 'webhook')} onChange={(e) => updateNodeData(selectedNode.id, { webhookSaveVariable: e.target.value })} className="h-9 font-mono" placeholder="webhook" />
+                <p className="text-[10px] text-muted-foreground">O JSON recebido será resolvido em variáveis individuais. Ex: se o JSON for {"{"}"nome": "João", "email": "j@e.com"{"}"}, você poderá acessar {"{{"}webhook.nome{"}}"}  e {"{{"}webhook.email{"}}"}</p>
+              </div>
+              <p className="text-[10px] text-muted-foreground">Este bloco recebe dados via POST. Quando chamado, o JSON é parseado e cada campo fica acessível como variável. O fluxo continua automaticamente com os dados recebidos.</p>
             </div>
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">Método HTTP</Label>
-              <Select value={String(selectedNode.data.webhookMethod || 'POST')} onValueChange={(v) => updateNodeData(selectedNode.id, { webhookMethod: v as any })}>
-                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="GET">GET</SelectItem>
-                  <SelectItem value="POST">POST</SelectItem>
-                  <SelectItem value="PUT">PUT</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">Headers (JSON, opcional)</Label>
-              <Textarea value={String(selectedNode.data.webhookHeaders || '')} onChange={(e) => updateNodeData(selectedNode.id, { webhookHeaders: e.target.value })} className="min-h-[60px] resize-none font-mono text-sm" placeholder='{"Authorization": "Bearer token"}' />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">Salvar resposta na variável</Label>
-              <Input value={String(selectedNode.data.webhookSaveVariable || '')} onChange={(e) => updateNodeData(selectedNode.id, { webhookSaveVariable: e.target.value })} className="h-9 font-mono" placeholder="webhook_data" />
-            </div>
-            <p className="text-[10px] text-muted-foreground">Este bloco recebe dados de um webhook externo. Quando o endpoint for chamado, o fluxo será executado a partir deste ponto com os dados recebidos salvos na variável configurada.</p>
-          </div>
-        )}
+          );
+        })()}
 
       </div>
     </div>
