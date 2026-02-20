@@ -1,6 +1,16 @@
 import { ArrowRight, Bot } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const CTASection = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const handleCTA = () => {
+    if (user) navigate('/dashboard');
+    else navigate('/auth');
+  };
+
   return (
     <>
       <section className="py-24 border-t border-border">
@@ -16,13 +26,13 @@ const CTASection = () => {
               <p className="text-muted-foreground max-w-xl mx-auto mb-8">
                 Comece agora com seu primeiro bot em qualquer plataforma.
               </p>
-              <a
-                href="/auth"
+              <button
+                onClick={handleCTA}
                 className="inline-flex items-center gap-2 rounded-full bg-gradient-primary px-8 py-3.5 text-base font-semibold text-primary-foreground shadow-glow transition-all hover:scale-105"
               >
                 Criar Conta Grátis Agora
                 <ArrowRight className="h-4 w-4" />
-              </a>
+              </button>
             </div>
           </div>
         </div>
