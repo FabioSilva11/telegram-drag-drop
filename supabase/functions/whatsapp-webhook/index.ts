@@ -374,12 +374,16 @@ Deno.serve(async (req) => {
           // Captura texto do botão
           const clickedBtn = cur.data.buttons?.find((b: any) => String(b.id) === buttonReplyId);
           if (clickedBtn) vars.last_button_text = clickedBtn.text;
+          let nextNodeId: string | null = null;
           for (const e of edgesToFollow) {
             const nn = findNode(nodes, e.target);
-            if (nn) await processNode(nn, nodes, edges, phoneNumberId, accessToken, from, buttonReplyId, vars, sb, flowId, currentBotId);
+            if (nn) {
+              nextNodeId = nn.id;
+              await processNode(nn, nodes, edges, phoneNumberId, accessToken, from, buttonReplyId, vars, sb, flowId, currentBotId);
+            }
           }
-          // Atualiza sessão em vez de deletar — não usa break
-          await sb.from("bot_sessions").update({ current_node_id: null, variables: vars }).eq("flow_id", flowId).eq("telegram_chat_id", chatIdNum);
+          // Update to next node instead of null — preserves chaining
+          await sb.from("bot_sessions").update({ current_node_id: nextNodeId, variables: vars }).eq("flow_id", flowId).eq("telegram_chat_id", chatIdNum);
         } else if (!isButtonReply && cur?.type === "userInput") {
           const vn = cur.data.variableName || "user_response";
           const vars = { ...session.variables, [vn]: msgContent };

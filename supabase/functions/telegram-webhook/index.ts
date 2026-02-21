@@ -313,8 +313,11 @@ async function processNode(
     case "buttonReply":
       if (d.buttons?.length > 0) {
         const text = d.content ? replaceVars(d.content, vars) : d.label || "Escolha:";
-        // Each button gets its own row in inline_keyboard, with callback_data = button id
-        const keyboard = d.buttons.map((b: any) => [{ text: b.text, callback_data: String(b.id) }]);
+        // Each button gets a unique callback_data to avoid conflicts
+        const keyboard = d.buttons.map((b: any) => {
+          const uniqueId = `btn_${Date.now()}_${Math.random().toString(36).slice(2, 8)}_${b.id}`;
+          return [{ text: b.text, callback_data: uniqueId }];
+        });
         await tgCall(token, "sendMessage", {
           chat_id: chatId,
           text,
@@ -477,13 +480,18 @@ Deno.serve(async (req) => {
       if (session?.current_node_id) {
         const cur = findNode(nodes, session.current_node_id);
         if (isCb && cur?.type === "buttonReply") {
-          // Try to match the specific button handle (btn-{buttonId})
-          const handle = `btn-${cbData}`;
+          // Extract original button ID from unique callback_data (format: btn_timestamp_random_originalId)
+          let originalBtnId = cbData;
+          const btnMatch = cbData.match(/^btn_\d+_[a-z0-9]+_(.+)$/);
+          if (btnMatch) originalBtnId = btnMatch[1];
+
+          // Try to match the specific button handle
+          const handle = `btn-${originalBtnId}`;
           let edgesToFollow = edges.filter((e) => e.source === cur.id && e.sourceHandle === handle);
           
           // If no specific button edge found, also try matching by button text
           if (edgesToFollow.length === 0 && cur.data.buttons) {
-            const matchedBtn = cur.data.buttons.find((b: any) => String(b.id) === cbData || b.text === cbData);
+            const matchedBtn = cur.data.buttons.find((b: any) => String(b.id) === originalBtnId || b.text === originalBtnId);
             if (matchedBtn) {
               const altHandle = `btn-${matchedBtn.id}`;
               edgesToFollow = edges.filter((e) => e.source === cur.id && e.sourceHandle === altHandle);
@@ -495,24 +503,28 @@ Deno.serve(async (req) => {
             edgesToFollow = edges.filter((e) => e.source === cur.id && e.sourceHandle === "default");
           }
           
-          // Last resort: any outgoing edge from this node (bottom handle)
+          // Last resort: any outgoing edge from this node
           if (edgesToFollow.length === 0) {
             edgesToFollow = edges.filter((e) => e.source === cur.id && !e.sourceHandle);
           }
           
-          const vars = { ...session.variables, last_button: cbData };
-          // Find button text for variable
+          const vars = { ...session.variables, last_button: originalBtnId };
           if (cur.data.buttons) {
-            const clickedBtn = cur.data.buttons.find((b: any) => String(b.id) === cbData);
+            const clickedBtn = cur.data.buttons.find((b: any) => String(b.id) === originalBtnId);
             if (clickedBtn) vars.last_button_text = clickedBtn.text;
           }
           
+          // Determine next node ID to preserve session context
+          let nextNodeId: string | null = null;
           for (const e of edgesToFollow) {
             const nn = findNode(nodes, e.target);
-            if (nn) await processNode(nn, nodes, edges, token, chatId, cbData, vars, sb, flowId, currentBotId);
+            if (nn) {
+              nextNodeId = nn.id;
+              await processNode(nn, nodes, edges, token, chatId, originalBtnId, vars, sb, flowId, currentBotId);
+            }
           }
-          // Atualiza sessão em vez de deletar — permite encadeamento de botões
-          await sb.from("bot_sessions").update({ current_node_id: null, variables: vars }).eq("flow_id", flowId).eq("telegram_chat_id", chatId);
+          // Update session to the next node instead of null — preserves context for chained buttons
+          await sb.from("bot_sessions").update({ current_node_id: nextNodeId, variables: vars }).eq("flow_id", flowId).eq("telegram_chat_id", chatId);
           // NÃO usa break — processa o fluxo normalmente
 
         } else if (!isCb && cur?.type === "userInput") {

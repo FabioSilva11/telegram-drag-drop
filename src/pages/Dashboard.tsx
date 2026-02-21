@@ -13,8 +13,13 @@ import {
 } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
+  SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarFooter,
+  SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarMenu,
+  SidebarMenuItem, SidebarMenuButton, SidebarTrigger,
+} from '@/components/ui/sidebar';
+import {
   Bot, Plus, Pencil, Trash2, LogOut, Loader2, Crown, BarChart3, Check,
-  MessageCircle, Hash, AlertCircle, Menu, X, ChevronRight,
+  MessageCircle, Hash, AlertCircle, ChevronRight,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Platform } from '@/types/flow';
@@ -77,7 +82,6 @@ export default function Dashboard() {
   const [creating, setCreating] = useState(false);
   const [profile, setProfile] = useState<{ display_name: string | null } | null>(null);
   const [platformFilter, setPlatformFilter] = useState<Platform | 'all'>('all');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Telegram group bot fields
   const [isGroupBot, setIsGroupBot] = useState(false);
@@ -202,225 +206,212 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Sidebar overlay mobile */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-30 bg-black/50 md:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+    <SidebarProvider defaultOpen={true}>
+      <div className="min-h-screen flex w-full bg-background">
+        {/* Sidebar */}
+        <Sidebar collapsible="icon" className="border-r border-border">
+          <SidebarHeader className="border-b border-border px-4 py-3">
+            <a href="/" className="flex items-center gap-2 font-bold text-lg text-foreground">
+              <Bot className="h-6 w-6 text-primary shrink-0" />
+              <span className="group-data-[collapsible=icon]:hidden">FlowBot</span>
+            </a>
+          </SidebarHeader>
 
-      {/* Sidebar */}
-      <aside
-        className={`fixed top-0 left-0 z-40 h-full w-64 bg-card border-r border-border flex flex-col transition-transform duration-200
-          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 md:flex`}
-      >
-        {/* Sidebar header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-          <a href="/" className="flex items-center gap-2 font-bold text-lg text-foreground">
-            <Bot className="h-6 w-6 text-primary" />
-            FlowBot
-          </a>
-          <button className="md:hidden text-muted-foreground hover:text-foreground" onClick={() => setSidebarOpen(false)}>
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+          <SidebarContent>
+            <SidebarGroup>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      isActive={platformFilter === 'all'}
+                      onClick={() => setPlatformFilter('all')}
+                      tooltip="Meus Bots"
+                    >
+                      <Bot className="h-4 w-4" />
+                      <span>Meus Bots</span>
+                      <ChevronRight className="h-3.5 w-3.5 ml-auto" />
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
 
-        {/* Nav */}
-        <nav className="flex-1 px-3 py-4 space-y-1">
-          <button
-            onClick={() => { setPlatformFilter('all'); setSidebarOpen(false); }}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium bg-primary/10 text-primary"
-          >
-            <Bot className="h-4 w-4" />
-            Meus Bots
-            <ChevronRight className="h-3.5 w-3.5 ml-auto" />
-          </button>
+            <SidebarGroup>
+              <SidebarGroupLabel>Plataformas</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {(['telegram', 'whatsapp', 'discord'] as Platform[]).map((p) => (
+                    <SidebarMenuItem key={p}>
+                      <SidebarMenuButton
+                        isActive={platformFilter === p}
+                        onClick={() => setPlatformFilter(p)}
+                        tooltip={platformMeta[p].label}
+                      >
+                        {platformMeta[p].icon}
+                        <span>{platformMeta[p].label}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </SidebarContent>
 
-          <div className="pt-2 pb-1">
-            <p className="px-3 text-[10px] uppercase tracking-widest text-muted-foreground font-medium mb-1">Plataformas</p>
-            {(['telegram', 'whatsapp', 'discord'] as Platform[]).map((p) => (
-              <button
-                key={p}
-                onClick={() => { setPlatformFilter(p); setSidebarOpen(false); }}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors mb-0.5
-                  ${platformFilter === p ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'}`}
-              >
-                {platformMeta[p].icon}
-                {platformMeta[p].label}
-              </button>
-            ))}
-          </div>
-        </nav>
+          <SidebarFooter className="border-t border-border">
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton tooltip={planLimits.name}>
+                  <Crown className="h-4 w-4 text-primary" />
+                  <span className="text-primary font-medium">{planLimits.name}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={handleReportBug} tooltip="Reportar Bug">
+                  <AlertCircle className="h-4 w-4 text-yellow-500" />
+                  <span>Reportar Bug</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={() => { signOut(); navigate('/'); }} tooltip="Sair">
+                  <LogOut className="h-4 w-4" />
+                  <span>Sair</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarFooter>
+        </Sidebar>
 
-        {/* Sidebar footer */}
-        <div className="px-3 py-4 border-t border-border space-y-1">
-          {/* Plano */}
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/5 mb-2">
-            <Crown className="h-4 w-4 text-primary" />
-            <span className="text-xs font-medium text-primary">{planLimits.name}</span>
-          </div>
-
-          {/* Reportar bug */}
-          <button
-            onClick={handleReportBug}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
-          >
-            <AlertCircle className="h-4 w-4 text-yellow-500" />
-            Reportar Bug
-          </button>
-
-          {/* Sair */}
-          <button
-            onClick={() => { signOut(); navigate('/'); }}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-          >
-            <LogOut className="h-4 w-4" />
-            Sair
-          </button>
-        </div>
-      </aside>
-
-      {/* Main */}
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-20">
-          <div className="flex items-center justify-between px-4 sm:px-6 py-4">
-            <div className="flex items-center gap-3">
-              <button
-                className="md:hidden text-muted-foreground hover:text-foreground"
-                onClick={() => setSidebarOpen(true)}
-              >
-                <Menu className="h-5 w-5" />
-              </button>
-              <h1 className="text-lg font-bold md:hidden">FlowBot</h1>
+        {/* Main content */}
+        <div className="flex-1 flex flex-col min-w-0">
+          <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-20">
+            <div className="flex items-center justify-between px-4 sm:px-6 py-3">
+              <SidebarTrigger />
+              <span className="text-sm text-muted-foreground truncate max-w-[200px]">
+                {profile?.display_name || user.email}
+              </span>
             </div>
-            <span className="hidden sm:inline text-sm text-muted-foreground truncate max-w-[180px]">
-              {profile?.display_name || user.email}
-            </span>
-          </div>
-        </header>
+          </header>
 
-        <main className="flex-1 px-4 sm:px-6 py-6 sm:py-8 max-w-5xl mx-auto w-full">
-          {/* Stats */}
-          <div className="mb-8 grid gap-4 sm:grid-cols-2">
-            {[
-              { label: 'Total de Bots', value: `${bots.length} / ${planLimits.maxBots}` },
-              { label: 'Plano Atual', value: planLimits.name },
-            ].map((s) => (
-              <div key={s.label} className="rounded-xl border border-border bg-card p-5">
-                <p className="text-xs text-muted-foreground">{s.label}</p>
-                <p className="mt-1 text-2xl font-bold">{s.value}</p>
-              </div>
-            ))}
-          </div>
+          <main className="flex-1 px-4 sm:px-6 py-6 sm:py-8 max-w-5xl mx-auto w-full">
+            {/* Stats */}
+            <div className="mb-8 grid gap-4 sm:grid-cols-2">
+              {[
+                { label: 'Total de Bots', value: `${bots.length} / ${planLimits.maxBots}` },
+                { label: 'Plano Atual', value: planLimits.name },
+              ].map((s) => (
+                <div key={s.label} className="rounded-xl border border-border bg-card p-5">
+                  <p className="text-xs text-muted-foreground">{s.label}</p>
+                  <p className="mt-1 text-2xl font-bold">{s.value}</p>
+                </div>
+              ))}
+            </div>
 
-          {/* Upgrade Banner */}
-          {plan === 'starter' && (
-            <div className="mb-8 rounded-xl border border-primary/30 bg-primary/5 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div>
-                <p className="font-semibold text-primary">🚀 Faça upgrade para desbloquear mais recursos!</p>
-                <p className="text-sm text-muted-foreground">Mais bots, todos os blocos e suporte multiplataforma.</p>
+            {/* Upgrade Banner */}
+            {plan === 'starter' && (
+              <div className="mb-8 rounded-xl border border-primary/30 bg-primary/5 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                  <p className="font-semibold text-primary">🚀 Faça upgrade para desbloquear mais recursos!</p>
+                  <p className="text-sm text-muted-foreground">Mais bots, todos os blocos e suporte multiplataforma.</p>
+                </div>
+                <Button onClick={() => setUpgradeDialogOpen(true)} className="bg-primary text-primary-foreground whitespace-nowrap">
+                  Ver Planos
+                </Button>
               </div>
-              <Button onClick={() => setUpgradeDialogOpen(true)} className="bg-primary text-primary-foreground whitespace-nowrap">
-                Ver Planos
+            )}
+
+            {/* Platform Filter + Bot List Header */}
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                <h2 className="text-xl font-bold">Meus Bots</h2>
+                <div className="flex items-center gap-1 overflow-x-auto rounded-lg border border-border bg-secondary/50 p-0.5">
+                  <button
+                    onClick={() => setPlatformFilter('all')}
+                    className={`shrink-0 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${platformFilter === 'all' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                  >
+                    Todos
+                  </button>
+                  {(['telegram', 'whatsapp', 'discord'] as Platform[]).map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => setPlatformFilter(p)}
+                      className={`flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${platformFilter === p ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                    >
+                      {platformMeta[p].icon}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <Button
+                onClick={() => {
+                  if (!canCreateBot) { toast.error(`Limite de ${planLimits.maxBots} bot(s) atingido. Faça upgrade!`); return; }
+                  setDialogOpen(true);
+                }}
+                className="gap-2 bg-primary text-primary-foreground w-full sm:w-auto"
+              >
+                <Plus className="h-4 w-4" /> Novo Bot
               </Button>
             </div>
-          )}
 
-          {/* Platform Filter + Bot List Header */}
-          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-              <h2 className="text-xl font-bold">Meus Bots</h2>
-              <div className="flex items-center gap-1 overflow-x-auto rounded-lg border border-border bg-secondary/50 p-0.5">
-                <button
-                  onClick={() => setPlatformFilter('all')}
-                  className={`shrink-0 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${platformFilter === 'all' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                >
-                  Todos
-                </button>
-                {(['telegram', 'whatsapp', 'discord'] as Platform[]).map((p) => (
-                  <button
-                    key={p}
-                    onClick={() => setPlatformFilter(p)}
-                    className={`flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${platformFilter === p ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                  >
-                    {platformMeta[p].icon}
-                    <span className="hidden xs:inline">{platformMeta[p].label}</span>
-                  </button>
-                ))}
+            {loading ? (
+              <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+            ) : filteredBots.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-border py-16 text-center text-muted-foreground">
+                <Bot className="mx-auto mb-3 h-10 w-10 opacity-30" />
+                <p>{bots.length === 0 ? 'Nenhum bot criado ainda.' : 'Nenhum bot nesta plataforma.'}</p>
+                <Button variant="outline" className="mt-4" onClick={() => setDialogOpen(true)}>Criar primeiro bot</Button>
               </div>
-            </div>
-            <Button
-              onClick={() => {
-                if (!canCreateBot) { toast.error(`Limite de ${planLimits.maxBots} bot(s) atingido. Faça upgrade!`); return; }
-                setDialogOpen(true);
-              }}
-              className="gap-2 bg-primary text-primary-foreground w-full sm:w-auto"
-            >
-              <Plus className="h-4 w-4" /> Novo Bot
-            </Button>
-          </div>
-
-          {loading ? (
-            <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
-          ) : filteredBots.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border py-16 text-center text-muted-foreground">
-              <Bot className="mx-auto mb-3 h-10 w-10 opacity-30" />
-              <p>{bots.length === 0 ? 'Nenhum bot criado ainda.' : 'Nenhum bot nesta plataforma.'}</p>
-              <Button variant="outline" className="mt-4" onClick={() => setDialogOpen(true)}>Criar primeiro bot</Button>
-            </div>
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredBots.map((bot) => {
-                const meta = platformMeta[bot.platform] || platformMeta.telegram;
-                return (
-                  <div key={bot.id} className="rounded-xl border border-border bg-card p-5">
-                    <div className="mb-3 flex items-start gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary">
-                        {meta.icon}
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold">{bot.name}</h3>
-                        <div className="flex items-center gap-2">
-                          <span className={`text-[11px] font-medium uppercase ${bot.is_active ? 'text-green-500' : 'text-muted-foreground'}`}>
-                            {bot.is_active ? 'ATIVO' : 'INATIVO'}
-                          </span>
-                          <span className={`rounded-full border border-border px-2 py-0.5 text-[10px] font-medium ${meta.color}`}>
-                            {meta.label}
-                          </span>
-                          {bot.is_group_bot && (
-                            <span className="rounded-full border border-border px-2 py-0.5 text-[10px] font-medium text-muted-foreground">Grupo</span>
-                          )}
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {filteredBots.map((bot) => {
+                  const meta = platformMeta[bot.platform] || platformMeta.telegram;
+                  return (
+                    <div key={bot.id} className="rounded-xl border border-border bg-card p-5">
+                      <div className="mb-3 flex items-start gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary">
+                          {meta.icon}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold">{bot.name}</h3>
+                          <div className="flex items-center gap-2">
+                            <span className={`text-[11px] font-medium uppercase ${bot.is_active ? 'text-green-500' : 'text-muted-foreground'}`}>
+                              {bot.is_active ? 'ATIVO' : 'INATIVO'}
+                            </span>
+                            <span className={`rounded-full border border-border px-2 py-0.5 text-[10px] font-medium ${meta.color}`}>
+                              {meta.label}
+                            </span>
+                            {bot.is_group_bot && (
+                              <span className="rounded-full border border-border px-2 py-0.5 text-[10px] font-medium text-muted-foreground">Grupo</span>
+                            )}
+                          </div>
                         </div>
                       </div>
+                      {bot.platform === 'telegram' && (
+                        <p className="mb-4 text-xs text-muted-foreground">Token: {maskToken(bot.telegram_token)}</p>
+                      )}
+                      {bot.platform === 'whatsapp' && (
+                        <p className="mb-4 text-xs text-muted-foreground">Phone ID: {maskToken(bot.whatsapp_phone_number_id)}</p>
+                      )}
+                      {bot.platform === 'discord' && (
+                        <p className="mb-4 text-xs text-muted-foreground">App ID: {maskToken(bot.discord_application_id)}</p>
+                      )}
+                      <div className="flex flex-wrap gap-2">
+                        <Button variant="outline" size="sm" className="flex-1 min-w-[100px] gap-1.5 border-border text-xs" onClick={() => navigate(`/editor/${bot.platform}/${bot.id}`)}>
+                          <Pencil className="h-3.5 w-3.5" /> Editar
+                        </Button>
+                        <Button variant="outline" size="sm" className="gap-1.5 border-border text-xs" onClick={() => navigate(`/analytics/${bot.id}`)}>
+                          <BarChart3 className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-destructive/10" onClick={() => deleteBot(bot.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
-                    {bot.platform === 'telegram' && (
-                      <p className="mb-4 text-xs text-muted-foreground">Token: {maskToken(bot.telegram_token)}</p>
-                    )}
-                    {bot.platform === 'whatsapp' && (
-                      <p className="mb-4 text-xs text-muted-foreground">Phone ID: {maskToken(bot.whatsapp_phone_number_id)}</p>
-                    )}
-                    {bot.platform === 'discord' && (
-                      <p className="mb-4 text-xs text-muted-foreground">App ID: {maskToken(bot.discord_application_id)}</p>
-                    )}
-                    <div className="flex flex-wrap gap-2">
-                      <Button variant="outline" size="sm" className="flex-1 min-w-[100px] gap-1.5 border-border text-xs" onClick={() => navigate(`/editor/${bot.platform}/${bot.id}`)}>
-                        <Pencil className="h-3.5 w-3.5" /> Editar
-                      </Button>
-                      <Button variant="outline" size="sm" className="gap-1.5 border-border text-xs" onClick={() => navigate(`/analytics/${bot.id}`)}>
-                        <BarChart3 className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-destructive/10" onClick={() => deleteBot(bot.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </main>
+                  );
+                })}
+              </div>
+            )}
+          </main>
+        </div>
       </div>
 
       {/* Create Bot Dialog */}
@@ -575,6 +566,6 @@ export default function Dashboard() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </SidebarProvider>
   );
 }
